@@ -2,4 +2,26 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Primary -->
+    <color name="primary_navy">#122944</color>
+    <color name="primary_navy_dark">#0F2236</color>
+
+    <!-- Backgrounds -->
+    <color name="bg_screen">#F8F9FD</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1E293B</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="card_stroke">#E2E8F0</color>
+
+    <!-- Status / Priority -->
+    <color name="critical">#D32F2F</color>
+    <color name="critical_bg">#FFEBEE</color>
+    <color name="amber">#F57C00</color>
+    <color name="amber_bg">#FFF3E0</color>
+    <color name="info_blue">#1976D2</color>
+    <color name="info_blue_bg">#E3F2FD</color>
+    <color name="green">#388E3C</color>
+    <color name="green_bg">#E8F5E9</color>
 </resources>

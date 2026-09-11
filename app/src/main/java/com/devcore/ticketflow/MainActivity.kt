@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
 
                     val intent = Intent(
                         this,
-                        UserActivity::class.java
+                        UserDashboardActivity::class.java
                     )
 
                     startActivity(intent)

@@ -26,6 +26,11 @@
 
         <activity android:name=".AdminActivity" />
         <activity android:name=".UserActivity" />
+        <activity android:name=".UserDashboardActivity" />
+        <activity android:name=".UserTicketsActivity" />
+        <activity android:name=".UserProfileActivity" />
+        <activity android:name=".UserCreateTicketActivity" />
+        <activity android:name=".UserTicketDetailActivity" />
 
     </application>
 

@@ -1,3 +1,112 @@
 <resources>
     <string name="app_name">ticketFlow.mobile</string>
+
+    <!-- Bottom Navigation - User -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_tickets">Mis Tickets</string>
+    <string name="nav_profile">Perfil</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Hola, %1$s</string>
+    <string name="dashboard_subtitle">¿Qué problema necesitas reportar?</string>
+    <string name="dashboard_create_ticket">+ Crear ticket</string>
+    <string name="dashboard_pending">PENDIENTES</string>
+    <string name="dashboard_pending_subtitle">Requieren atención</string>
+    <string name="dashboard_in_process">EN PROCESO</string>
+    <string name="dashboard_in_process_subtitle">Siendo evaluados</string>
+    <string name="dashboard_resolved">SOLUCIONADOS</string>
+    <string name="dashboard_resolved_subtitle">Este mes</string>
+    <string name="dashboard_recent_tickets">Mis tickets recientes</string>
+    <string name="dashboard_view_all">Ver todos ></string>
+    <string name="dashboard_fab_description">Crear nuevo ticket</string>
+
+    <!-- Ticket items (mock data) -->
+    <string name="ticket_id_001">#001</string>
+    <string name="ticket_id_002">#002</string>
+    <string name="ticket_id_003">#003</string>
+    <string name="ticket_desc_001">Impresora HP no imprime color</string>
+    <string name="ticket_desc_002">PC-003 Pantalla azul al iniciar</string>
+    <string name="ticket_desc_003">Reemplazo de teclado PC-002</string>
+    <string name="ticket_priority_critica">Crítica</string>
+    <string name="ticket_priority_alta">Alta</string>
+    <string name="ticket_priority_media">Media</string>
+    <string name="ticket_priority_baja">Baja</string>
+    <string name="ticket_status_pendiente">Pendiente</string>
+    <string name="ticket_status_en_proceso">En proceso</string>
+    <string name="ticket_status_solucionado">Solucionado</string>
+    <string name="ticket_ver_detalle">Ver detalle</string>
+
+    <!-- Mis Tickets -->
+    <string name="title_mis_tickets">Mis Tickets</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_pendiente">Pendientes</string>
+    <string name="filter_en_proceso">En proceso</string>
+    <string name="filter_solucionados">Solucionados</string>
+    <string name="ticket_fecha_001">12 Ago 2026</string>
+    <string name="ticket_fecha_002">11 Ago 2026</string>
+    <string name="ticket_fecha_003">10 Ago 2026</string>
+    <string name="ticket_equipo_001">Impresora HP</string>
+    <string name="ticket_equipo_002">Computadora PC-003</string>
+    <string name="ticket_equipo_003">Computadora PC-002</string>
+
+    <!-- Perfil -->
+    <string name="title_mi_perfil">Mi perfil</string>
+    <string name="profile_rol_empleado">Rol: Empleado</string>
+    <string name="profile_editar_informacion">Editar información</string>
+    <string name="profile_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="profile_config_notificaciones">Configuración de notificaciones</string>
+    <string name="profile_cerrar_sesion">Cerrar sesión</string>
+
+    <!-- Crear Ticket -->
+    <string name="title_crear_ticket">Crear nuevo ticket</string>
+    <string name="label_equipo">Equipo afectado *</string>
+    <string name="hint_equipo">Seleccione un equipo</string>
+    <string name="label_tipo_incidencia">Tipo de incidencia *</string>
+    <string name="hint_tipo_incidencia">Ej. Pantalla azul, no imprime…</string>
+    <string name="label_descripcion">Descripción del problema *</string>
+    <string name="hint_descripcion">Describa el problema con el mayor detalle posible…</string>
+    <string name="label_prioridad">Prioridad *</string>
+    <string name="label_evidencia">Evidencia (Opcional)</string>
+    <string name="btn_tomar_foto">Tomar foto</string>
+    <string name="btn_galeria">Galería</string>
+    <string name="btn_enviar_ticket">Enviar ticket</string>
+    <string name="btn_eliminar_evidencia">Eliminar evidencia</string>
+    <string name="btn_anadir_evidencia">Añadir más evidencia</string>
+    <string name="txt_vista_previa">Vista previa de la imagen adjunta</string>
+    <string name="fake_submit_ticket">Vista de confirmación — la lógica de envío se conectará con Supabase</string>
+
+    <!-- Detalle Ticket -->
+    <string name="title_ticket_detalle">Ticket %1$s</string>
+    <string name="ticket_fecha_reporte">Reportado el 12 Ago 2026</string>
+    <string name="ticket_incidente_titulo">Impresora HP no imprime color</string>
+    <string name="spec_equipo">EQUIPO</string>
+    <string name="spec_responsable">RESPONSABLE</string>
+    <string name="spec_descripcion">DESCRIPCIÓN</string>
+    <string name="spec_evidencia">EVIDENCIA ADJUNTA</string>
+    <string name="spec_equipo_valor">Impresora HP LaserJet M126nw</string>
+    <string name="spec_responsable_valor">Soporte Técnico de Perfumería VIP</string>
+    <string name="spec_descripcion_valor">La impresora no imprime en color. Los documentos salen en grises y el mensaje de tóner aparece en pantalla aunque el cartucho fue reemplazado recientemente.</string>
+    <string name="spec_evidencia_valor">Imagen adjunta de la evidencia</string>
+    <string name="label_actualizaciones">Actualizaciones</string>
+    <string name="label_comentarios_soporte">Comentarios del Soporte</string>
+    <string name="up_diag_titulo">Diagnóstico en curso</string>
+    <string name="up_diag_fecha">12 Ago, 14:30</string>
+    <string name="up_diag_desc">El equipo de soporte está revisando el tóner y los controladores de impresión.</string>
+    <string name="up_recibido_titulo">Ticket recibido</string>
+    <string name="up_recibido_fecha">12 Ago, 09:15</string>
+    <string name="up_recibido_desc">El ticket fue asignado al área de soporte de Perfumería VIP.</string>
+    <string name="up_creado_titulo">Ticket creado</string>
+    <string name="up_creado_fecha">12 Ago, 08:45</string>
+    <string name="up_creado_desc">Reporte registrado por el usuario.</string>
+    <string name="coment_remitente">Soporte TI</string>
+    <string name="coment_fecha">12 Ago, 14:30</string>
+    <string name="coment_texto">Hola, ya identificamos el problema del tóner. Coordinamos el reemplazo mañana en la mañana.</string>
+
+    <string-array name="opciones_equipos">
+        <item>Impresora HP LaserJet M126nw</item>
+        <item>Computadora PC-003</item>
+        <item>Computadora PC-002</item>
+        <item>Monitor Dell 24"</item>
+        <item>Teclado y mouse (kit)</item>
+    </string-array>
 </resources>

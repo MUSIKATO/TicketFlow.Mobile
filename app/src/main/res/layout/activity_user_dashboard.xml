@@ -116,19 +116,17 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ====== SECCION 3: TARJETAS DE METRICAS (3 columnas) ====== -->
+            <!-- ====== SECCION 3: TARJETAS DE METRICAS (tarjetas apiladas) ====== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/section_gap"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
                 <!-- Card: PENDIENTES -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="4dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="@dimen/card_corner_radius"
                     app:cardElevation="1dp"
@@ -138,58 +136,92 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_status_dot"
-                                android:backgroundTint="@color/amber" />
-
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:letterSpacing="0.06"
-                                android:text="@string/dashboard_pending"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="@dimen/status_label_size"
-                                android:textStyle="bold" />
-                        </LinearLayout>
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
 
-                        <TextView
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_status_dot"
+                                    android:backgroundTint="@color/amber" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:letterSpacing="0.06"
+                                    android:text="@string/dashboard_pending"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="@dimen/status_label_size"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+<TextView
                             android:id="@+id/txtPendingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="8"
-                            android:textColor="@color/text_primary"
-                            android:textSize="@dimen/status_number_size"
-                            android:textStyle="bold" />
+                            android:text="0"
+                                android:textColor="@color/text_primary"
+                                android:textSize="@dimen/status_number_size"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/dashboard_pending_subtitle"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:contentDescription="@string/dashboard_pending_subtitle"
+                                    android:src="@drawable/ic_hourglass"
+                                    android:tint="@color/text_secondary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="@string/dashboard_pending_subtitle"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginEnd="-50dp"
+                            android:layout_marginTop="-50dp"
+                            android:alpha="0.35"
+                            android:background="@drawable/bg_status_dot"
+                            android:backgroundTint="@color/amber" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- Card: EN PROCESO -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginHorizontal="4dp"
+                    android:layout_marginTop="8dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="@dimen/card_corner_radius"
                     app:cardElevation="1dp"
@@ -199,58 +231,92 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_status_dot"
-                                android:backgroundTint="@color/info_blue" />
-
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:letterSpacing="0.06"
-                                android:text="@string/dashboard_in_process"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="@dimen/status_label_size"
-                                android:textStyle="bold" />
-                        </LinearLayout>
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
 
-                        <TextView
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_status_dot"
+                                    android:backgroundTint="@color/info_blue" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:letterSpacing="0.06"
+                                    android:text="@string/dashboard_in_process"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="@dimen/status_label_size"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+<TextView
                             android:id="@+id/txtInProcessCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="3"
-                            android:textColor="@color/text_primary"
-                            android:textSize="@dimen/status_number_size"
-                            android:textStyle="bold" />
+                            android:text="0"
+                                android:textColor="@color/text_primary"
+                                android:textSize="@dimen/status_number_size"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/dashboard_in_process_subtitle"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:contentDescription="@string/dashboard_in_process_subtitle"
+                                    android:src="@drawable/ic_hourglass"
+                                    android:tint="@color/text_secondary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="@string/dashboard_in_process_subtitle"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginEnd="-50dp"
+                            android:layout_marginTop="-50dp"
+                            android:alpha="0.35"
+                            android:background="@drawable/bg_status_dot"
+                            android:backgroundTint="@color/info_blue" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- Card: SOLUCIONADOS -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="@dimen/card_corner_radius"
                     app:cardElevation="1dp"
@@ -260,49 +326,84 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
+                        android:clipChildren="false"
+                        android:clipToPadding="false"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
 
                         <LinearLayout
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_status_dot"
-                                android:backgroundTint="@color/green" />
-
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:letterSpacing="0.06"
-                                android:text="@string/dashboard_resolved"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="@dimen/status_label_size"
-                                android:textStyle="bold" />
-                        </LinearLayout>
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
 
-                        <TextView
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_status_dot"
+                                    android:backgroundTint="@color/green" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:letterSpacing="0.06"
+                                    android:text="@string/dashboard_resolved"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="@dimen/status_label_size"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+<TextView
                             android:id="@+id/txtResolvedCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="6dp"
-                            android:text="4"
-                            android:textColor="@color/text_primary"
-                            android:textSize="@dimen/status_number_size"
-                            android:textStyle="bold" />
+                            android:text="0"
+                                android:textColor="@color/text_primary"
+                                android:textSize="@dimen/status_number_size"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/dashboard_resolved_subtitle"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="16dp"
+                                    android:layout_height="16dp"
+                                    android:contentDescription="@string/dashboard_resolved_subtitle"
+                                    android:src="@drawable/ic_hourglass"
+                                    android:tint="@color/text_secondary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="6dp"
+                                    android:text="@string/dashboard_resolved_subtitle"
+                                    android:textColor="@color/text_secondary"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginEnd="-50dp"
+                            android:layout_marginTop="-50dp"
+                            android:alpha="0.35"
+                            android:background="@drawable/bg_status_dot"
+                            android:backgroundTint="@color/green" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>

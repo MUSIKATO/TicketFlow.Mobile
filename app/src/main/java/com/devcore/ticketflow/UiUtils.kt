@@ -9,8 +9,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
-// ponytail: utilidades compartidas por las pantallas del rol usuario.
-// Evita duplicar el manejo de insets (notch/gestos) y el enrutado del BottomNav.
 object LayoutInsets {
 
     // Pantalla con BottomNavigation + scroll + FAB opcional:

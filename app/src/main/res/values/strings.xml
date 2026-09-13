@@ -9,7 +9,7 @@
     <!-- Dashboard -->
     <string name="dashboard_greeting">Hola, %1$s</string>
     <string name="dashboard_subtitle">¿Qué problema necesitas reportar?</string>
-    <string name="dashboard_create_ticket">+ Crear ticket</string>
+    <string name="dashboard_create_ticket">Crear ticket</string>
     <string name="dashboard_pending">PENDIENTES</string>
     <string name="dashboard_pending_subtitle">Requieren atención</string>
     <string name="dashboard_in_process">EN PROCESO</string>
@@ -19,6 +19,7 @@
     <string name="dashboard_recent_tickets">Mis tickets recientes</string>
     <string name="dashboard_view_all">Ver todos ></string>
     <string name="dashboard_fab_description">Crear nuevo ticket</string>
+    <string name="error_cargar_metricas">No se pudieron cargar los datos</string>
 
     <!-- Ticket items (mock data) -->
     <string name="ticket_id_001">#001</string>

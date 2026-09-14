@@ -20,14 +20,18 @@ object LayoutInsets {
             val b = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(v.paddingLeft, b.top, v.paddingRight, v.paddingBottom)
             scroll?.let {
-                val lp = it.layoutParams as ViewGroup.MarginLayoutParams
-                lp.bottomMargin = navHeightPx + b.bottom
-                it.layoutParams = lp
+                val lp = it.layoutParams
+                if (lp is ViewGroup.MarginLayoutParams) {
+                    lp.bottomMargin = navHeightPx + b.bottom
+                    it.layoutParams = lp
+                }
             }
             fab?.let {
-                val lp = it.layoutParams as ViewGroup.MarginLayoutParams
-                lp.bottomMargin = navHeightPx + b.bottom + fabGapPx
-                it.layoutParams = lp
+                val lp = it.layoutParams
+                if (lp is ViewGroup.MarginLayoutParams) {
+                    lp.bottomMargin = navHeightPx + b.bottom + fabGapPx
+                    it.layoutParams = lp
+                }
             }
             bottomNav?.setPadding(0, 0, 0, b.bottom)
             insets
@@ -43,13 +47,17 @@ object LayoutInsets {
             v.setPadding(v.paddingLeft, b.top, v.paddingRight, v.paddingBottom)
             pinned?.let {
                 val pinnedH = (it.layoutParams.height).takeIf { h -> h > 0 } ?: it.height
-                val lp = it.layoutParams as ViewGroup.MarginLayoutParams
-                lp.bottomMargin = b.bottom
-                it.layoutParams = lp
+                val lp = it.layoutParams
+                if (lp is ViewGroup.MarginLayoutParams) {
+                    lp.bottomMargin = b.bottom
+                    it.layoutParams = lp
+                }
                 scroll?.let { s ->
-                    val slp = s.layoutParams as ViewGroup.MarginLayoutParams
-                    slp.bottomMargin = pinnedH + gapPx + b.bottom
-                    s.layoutParams = slp
+                    val slp = s.layoutParams
+                    if (slp is ViewGroup.MarginLayoutParams) {
+                        slp.bottomMargin = pinnedH + gapPx + b.bottom
+                        s.layoutParams = slp
+                    }
                 }
             }
             insets

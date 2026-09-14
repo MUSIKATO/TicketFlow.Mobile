@@ -83,6 +83,7 @@
     <!-- Detalle Ticket -->
     <string name="title_ticket_detalle">Ticket %1$s</string>
     <string name="ticket_fecha_reporte">Reportado el 12 Ago 2026</string>
+    <string name="ticket_fecha_reporte_fmt">Reportado el %1$s</string>
     <string name="ticket_incidente_titulo">Impresora HP no imprime color</string>
     <string name="spec_equipo">EQUIPO</string>
     <string name="spec_responsable">RESPONSABLE</string>

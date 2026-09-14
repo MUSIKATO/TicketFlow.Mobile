@@ -1,10 +1,14 @@
 package com.devcore.ticketflow
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -90,3 +94,27 @@ fun setupUserBottomNav(nav: BottomNavigationView, activity: AppCompatActivity, c
         true
     }
 }
+
+// Badges prioridad/estado compartidos entre listas y detalle.
+fun aplicarBadge(txt: TextView, badge: Triple<String, Int, Int>) {
+    txt.text = badge.first
+    txt.setTextColor(badge.second)
+    txt.backgroundTintList = ColorStateList.valueOf(badge.third)
+}
+
+fun prioridadBadge(ctx: Context, prioridad: String): Triple<String, Int, Int> = when (prioridad) {
+    "Baja" -> Triple(ctx.getString(R.string.ticket_priority_baja), color(ctx, R.color.green), color(ctx, R.color.green_bg))
+    "Media" -> Triple(ctx.getString(R.string.ticket_priority_media), color(ctx, R.color.amber), color(ctx, R.color.amber_bg))
+    "Alta" -> Triple(ctx.getString(R.string.ticket_priority_alta), color(ctx, R.color.orange), color(ctx, R.color.orange_bg))
+    "Critica" -> Triple(ctx.getString(R.string.ticket_priority_critica), color(ctx, R.color.critical), color(ctx, R.color.critical_bg))
+    else -> Triple(prioridad, color(ctx, R.color.text_secondary), color(ctx, R.color.card_stroke))
+}
+
+fun estadoBadge(ctx: Context, estado: String): Triple<String, Int, Int> = when (estado) {
+    "Pendiente" -> Triple(ctx.getString(R.string.ticket_status_pendiente), color(ctx, R.color.pending_status), color(ctx, R.color.pending_status_bg))
+    "En proceso" -> Triple(ctx.getString(R.string.ticket_status_en_proceso), color(ctx, R.color.info_blue), color(ctx, R.color.info_blue_bg))
+    "Solucionado" -> Triple(ctx.getString(R.string.ticket_status_solucionado), color(ctx, R.color.green), color(ctx, R.color.green_bg))
+    else -> Triple(estado, color(ctx, R.color.text_secondary), color(ctx, R.color.card_stroke))
+}
+
+private fun color(ctx: Context, id: Int) = ContextCompat.getColor(ctx, id)

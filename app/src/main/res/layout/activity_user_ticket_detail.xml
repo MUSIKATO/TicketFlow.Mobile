@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ponytail: Detalle Ticket — cabecera, especificaciones, timeline y comentarios, UI estática -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/userDetailCoordinator"
@@ -59,6 +58,7 @@
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/txtBadgePriority"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
@@ -72,6 +72,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/txtBadgeStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_badge"
@@ -89,6 +90,7 @@
                     android:layout_weight="1" />
 
                 <TextView
+                    android:id="@+id/txtFechaReporte"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/ticket_fecha_reporte"
@@ -98,6 +100,7 @@
 
             <!-- Titulo del incidente -->
             <TextView
+                android:id="@+id/txtIncidenteTitulo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -133,6 +136,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/txtSpecEquipo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
@@ -207,6 +211,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/txtSpecDescripcion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
@@ -219,6 +224,7 @@
 
             <!-- Bloque: EVIDENCIA ADJUNTA -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardEvidencia"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -244,6 +250,7 @@
                         android:textStyle="bold" />
 
                     <ImageView
+                        android:id="@+id/imgEvidencia"
                         android:layout_width="match_parent"
                         android:layout_height="150dp"
                         android:layout_marginTop="10dp"

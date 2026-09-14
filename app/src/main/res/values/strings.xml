@@ -62,6 +62,8 @@
     <string name="title_crear_ticket">Crear nuevo ticket</string>
     <string name="label_equipo">Equipo afectado *</string>
     <string name="hint_equipo">Seleccione un equipo</string>
+    <string name="opcion_equipo_otro">Otro</string>
+    <string name="label_equipo_otro">Escribe el equipo afectado</string>
     <string name="label_tipo_incidencia">Tipo de incidencia *</string>
     <string name="hint_tipo_incidencia">Ej. Pantalla azul, no imprime…</string>
     <string name="label_descripcion">Descripción del problema *</string>
@@ -74,7 +76,9 @@
     <string name="btn_eliminar_evidencia">Eliminar evidencia</string>
     <string name="btn_anadir_evidencia">Añadir más evidencia</string>
     <string name="txt_vista_previa">Vista previa de la imagen adjunta</string>
-    <string name="fake_submit_ticket">Vista de confirmación — la lógica de envío se conectará con Supabase</string>
+    <string name="error_campos_requeridos">Completa todos los campos obligatorios</string>
+    <string name="error_crear_ticket">No se pudo crear el ticket</string>
+    <string name="error_crear_ticket_sesion">Sesión no disponible, vuelve a iniciar sesión</string>
 
     <!-- Detalle Ticket -->
     <string name="title_ticket_detalle">Ticket %1$s</string>
@@ -109,5 +113,6 @@
         <item>Computadora PC-002</item>
         <item>Monitor Dell 24"</item>
         <item>Teclado y mouse (kit)</item>
+        <item>@string/opcion_equipo_otro</item>
     </string-array>
 </resources>

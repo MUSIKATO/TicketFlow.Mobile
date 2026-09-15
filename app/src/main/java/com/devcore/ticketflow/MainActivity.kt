@@ -122,6 +122,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 .decodeSingle<Profile>()
 
+            // Se guarda el perfil del usuario a nivel global para usarlo en otras vistas
+            SupabaseClient.perfil = perfil
+
             when (perfil.rol.lowercase()) {
 
                 "admin" -> {
@@ -139,7 +142,7 @@ class MainActivity : AppCompatActivity() {
 
                     val intent = Intent(
                         this,
-                        UserActivity::class.java
+                        UserDashboardActivity::class.java
                     )
 
                     startActivity(intent)

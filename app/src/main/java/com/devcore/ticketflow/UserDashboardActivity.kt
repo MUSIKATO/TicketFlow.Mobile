@@ -14,6 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.chip.ChipGroup
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Count
@@ -30,6 +32,11 @@ import java.time.format.DateTimeFormatter
 class UserDashboardActivity : AppCompatActivity() {
 
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
+
+    private var filtroEstado: String? = null
+    private var peticionesActivas = 0
+    private var peticionesMetricas = 0
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -58,6 +65,25 @@ class UserDashboardActivity : AppCompatActivity() {
         findViewById<RecyclerView>(R.id.recyclerRecentTickets).layoutManager =
             LinearLayoutManager(this)
 
+        swipeRefresh = findViewById(R.id.swipeRefresh)
+        swipeRefresh.setColorSchemeResources(
+            R.color.primary_navy, R.color.pending_status, R.color.info_blue, R.color.green
+        )
+        swipeRefresh.setOnRefreshListener {
+            cargarMetricas()
+            cargarTicketsRecientes()
+        }
+
+        findViewById<ChipGroup>(R.id.chipGroupRecentFilter).setOnCheckedStateChangeListener { _, checkedIds ->
+            filtroEstado = when (checkedIds.firstOrNull()) {
+                R.id.chipFilterPendientes -> "Pendiente"
+                R.id.chipFilterEnProceso -> "En proceso"
+                R.id.chipFilterSolucionados -> "Solucionado"
+                else -> null
+            }
+            cargarTicketsRecientes()
+        }
+
         cargarMetricas()
         cargarTicketsRecientes()
     }
@@ -70,6 +96,7 @@ class UserDashboardActivity : AppCompatActivity() {
                 return@launch
             }
 
+            setCargandoMetricas(true)
             try {
                 val (pendientes, enProceso, solucionados) = withContext(Dispatchers.IO) {
                     val inicioMes = LocalDate.now().withDayOfMonth(1)
@@ -90,6 +117,8 @@ class UserDashboardActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("TicketFlowError", "Fallo al cargar métricas", e)
                 Toast.makeText(this@UserDashboardActivity, R.string.error_cargar_metricas, Toast.LENGTH_LONG).show()
+            } finally {
+                setCargandoMetricas(false)
             }
         }
     }
@@ -108,6 +137,21 @@ class UserDashboardActivity : AppCompatActivity() {
         return result.countOrNull()?.toInt() ?: 0
     }
 
+    private fun setCargando(activo: Boolean) {
+        peticionesActivas = (peticionesActivas + if (activo) 1 else -1).coerceAtLeast(0)
+        val cargando = peticionesActivas > 0
+        findViewById<View>(R.id.progressCargando).visibility = if (cargando) View.VISIBLE else View.GONE
+        findViewById<RecyclerView>(R.id.recyclerRecentTickets).visibility =
+            if (cargando) View.INVISIBLE else View.VISIBLE
+        if (peticionesActivas == 0 && peticionesMetricas == 0) swipeRefresh.isRefreshing = false
+    }
+
+    private fun setCargandoMetricas(activo: Boolean) {
+        peticionesMetricas = (peticionesMetricas + if (activo) 1 else -1).coerceAtLeast(0)
+        findViewById<View>(R.id.progressCargandoMetricas).visibility =
+            if (peticionesMetricas > 0) View.VISIBLE else View.GONE
+    }
+
     private fun cargarTicketsRecientes() {
         lifecycleScope.launch {
             val userId = SupabaseClient.perfil?.id
@@ -116,11 +160,16 @@ class UserDashboardActivity : AppCompatActivity() {
                 return@launch
             }
 
+            setCargando(true)
             try {
                 val tickets = withContext(Dispatchers.IO) {
+                    val estado = filtroEstado
                     json.decodeFromString<List<Ticket>>(
                         SupabaseClient.client.postgrest.from("tickets").select {
-                            filter { eq("profile", userId) }
+                            filter {
+                                eq("profile", userId)
+                                if (estado != null) eq("estado", estado)
+                            }
                             order("created_at", Order.DESCENDING)
                             limit(3)
                         }.data
@@ -131,6 +180,8 @@ class UserDashboardActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("TicketFlowError", "Fallo al cargar tickets recientes", e)
                 Toast.makeText(this@UserDashboardActivity, R.string.error_cargar_metricas, Toast.LENGTH_LONG).show()
+            } finally {
+                setCargando(false)
             }
         }
     }

@@ -1,8 +1,10 @@
 package com.devcore.ticketflow
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -82,6 +86,33 @@ class UserTicketDetailActivity : AppCompatActivity() {
             getString(R.string.ticket_fecha_reporte_fmt, formatoFecha(ticket.created_at))
         aplicarBadge(findViewById(R.id.txtBadgePriority), prioridadBadge(this, ticket.prioridad))
         aplicarBadge(findViewById(R.id.txtBadgeStatus), estadoBadge(this, ticket.estado))
+        ticket.evidencia_url?.let { cargarEvidencia(it) }
+    }
+
+    // ponytail: URL publica del bucket; HttpURLConnection nativo, sin libreria de imagenes. Probar con permisos de red.
+    private fun cargarEvidencia(url: String) {
+        lifecycleScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    val bytes = (URL(url).openConnection() as HttpURLConnection).inputStream.use { it.readBytes() }
+                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+                    var sampleSize = 1
+                    while (opts.outWidth / sampleSize > 1536) sampleSize *= 2 // evita OOM con fotos de alta resolucion
+                    opts.inJustDecodeBounds = false
+                    opts.inSampleSize = sampleSize
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, opts)
+                }
+                findViewById<ImageView>(R.id.imgEvidencia).apply {
+                    setImageBitmap(bitmap)
+imageTintList = null // el tint azul es solo del placeholder
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(0, 0, 0, 0)
+                }
+            } catch (e: Exception) {
+                Log.e("TicketFlowError", "Fallo al cargar la evidencia", e)
+            }
+        }
     }
 
     private fun formatoFecha(iso: String): String = try {

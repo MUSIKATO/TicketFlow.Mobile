@@ -53,3 +53,15 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }
+
+tasks.register<JavaExec>("runConsole") {
+    group = "application"
+    description = "Ejecuta la consola de TicketFlow Etapa 2"
+    dependsOn("compileDebugKotlin")
+    mainClass.set("com.devcore.ticketflow.console.MainConsoleKt")
+    classpath = files(
+        layout.buildDirectory.dir("intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes"),
+        configurations.getByName("debugRuntimeClasspath")
+    )
+    standardInput = System.`in`
+}

@@ -26,15 +26,15 @@ class UserProfileActivity : AppCompatActivity() {
         )
 
         // Datos del perfil cargado en la sesión
-        val perfil = SupabaseClient.perfil
-        perfil?.let {
-            findViewById<TextView>(R.id.txtProfileName).text = it.nombre
-            findViewById<TextView>(R.id.txtProfileEmail).text = it.correo
-        }
+        pintarPerfil()
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
         bottomNav.selectedItemId = R.id.nav_profile
         setupUserBottomNav(bottomNav, this, this::class.java)
+
+        findViewById<android.view.View>(R.id.rowEditarInfo).setOnClickListener {
+            startActivity(Intent(this, UserEditProfileActivity::class.java))
+        }
 
         findViewById<android.view.View>(R.id.btnLogout).setOnClickListener {
             lifecycleScope.launch {
@@ -44,6 +44,19 @@ class UserProfileActivity : AppCompatActivity() {
                 startActivity(intent)
                 finish()
             }
+        }
+    }
+
+    // ponytail: onResume refleja cambios de nombre/correo hechos en Editar Información sin volver a iniciar sesión.
+    override fun onResume() {
+        super.onResume()
+        pintarPerfil()
+    }
+
+    private fun pintarPerfil() {
+        SupabaseClient.perfil?.let {
+            findViewById<TextView>(R.id.txtProfileName).text = it.nombre
+            findViewById<TextView>(R.id.txtProfileEmail).text = it.correo
         }
     }
 }

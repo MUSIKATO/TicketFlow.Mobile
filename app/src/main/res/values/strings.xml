@@ -58,6 +58,14 @@
     <string name="profile_config_notificaciones">Configuración de notificaciones</string>
     <string name="profile_cerrar_sesion">Cerrar sesión</string>
 
+    <!-- Editar Informacion -->
+    <string name="title_editar_informacion">Editar información</string>
+    <string name="label_nombre">Nombre</string>
+    <string name="label_correo">Correo electrónico</string>
+    <string name="btn_guardar_cambios">Guardar cambios</string>
+    <string name="perfil_actualizado">Información actualizada</string>
+    <string name="error_actualizar_perfil">No se pudo actualizar la información</string>
+
     <!-- Crear Ticket -->
     <string name="title_crear_ticket">Crear nuevo ticket</string>
     <string name="label_equipo">Equipo afectado *</string>

@@ -284,11 +284,11 @@
                         app:cardElevation="0dp">
 
                         <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:layout_gravity="center"
+                            android:id="@+id/imgVistaPrevia"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
                             android:contentDescription="@string/txt_vista_previa"
-                            android:padding="8dp"
+                            android:scaleType="centerCrop"
                             android:src="@drawable/ic_ticket"
                             android:tint="@color/info_blue" />
                     </com.google.android.material.card.MaterialCardView>

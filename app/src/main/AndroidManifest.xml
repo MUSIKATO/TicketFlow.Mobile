@@ -29,8 +29,19 @@
         <activity android:name=".UserDashboardActivity" />
         <activity android:name=".UserTicketsActivity" />
         <activity android:name=".UserProfileActivity" />
+        <activity android:name=".UserEditProfileActivity" />
         <activity android:name=".UserCreateTicketActivity" />
         <activity android:name=".UserTicketDetailActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.devcore.ticketflow.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

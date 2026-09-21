@@ -42,9 +42,32 @@ class AdminActivity : AppCompatActivity() {
         }
 
         fab.setOnClickListener {
-            Toast.makeText(this, "Crear nuevo ticket", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Crear nuevo ticket - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
         }
 
+        // Listener para botón de soporte
+        findViewById<View>(R.id.btnSupport).setOnClickListener {
+            Toast.makeText(this, "Soporte técnico - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+        }
+
+        // Listeners para tarjetas de acciones rápidas
+        findViewById<View>(R.id.cardManageTickets).setOnClickListener {
+            Toast.makeText(this, "Gestionar tickets - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.cardRegisterEquipment).setOnClickListener {
+            Toast.makeText(this, "Registrar equipo - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.cardManageUsers).setOnClickListener {
+            Toast.makeText(this, "Gestionar usuarios - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+        }
+
+        findViewById<View>(R.id.cardViewReports).setOnClickListener {
+            Toast.makeText(this, "Ver reportes - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+        }
+
+        // Listener para perfil/cerrar sesión
         findViewById<View>(R.id.imgProfileAvatar).setOnClickListener {
             lifecycleScope.launch {
                 SupabaseClient.client.auth.signOut()
@@ -52,6 +75,33 @@ class AdminActivity : AppCompatActivity() {
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
+            }
+        }
+
+        // Listener para bottom navigation
+        findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    // Ya estamos en home
+                    true
+                }
+                R.id.nav_tickets -> {
+                    Toast.makeText(this, "Tickets - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                R.id.nav_equipment -> {
+                    Toast.makeText(this, "Equipment - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                R.id.nav_users -> {
+                    Toast.makeText(this, "Users - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                R.id.nav_profile -> {
+                    Toast.makeText(this, "Profile - Funcionalidad en desarrollo", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                else -> false
             }
         }
     }

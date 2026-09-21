@@ -1,0 +1,6 @@
+[2026-09-20 13:45] Error en BuscarTicket: ID inválido ingresado para búsqueda: PC-001
+[2026-09-20 14:04] Error en CambiarEstado: ID inválido
+[2026-09-20 14:04] Error en CambiarEstado: ID inválido
+[2026-09-20 14:05] Error en CambiarEstado: ID inválido
+[2026-09-20 14:05] Error en EliminarTicket: ID inválido
+[2026-09-20 14:11] Error en Login: Opción de menú principal incorrecta.

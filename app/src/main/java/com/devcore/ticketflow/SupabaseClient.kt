@@ -17,4 +17,7 @@ object SupabaseClient {
         install(Storage)
         install(Realtime)
     }
+
+    // Variable global con el perfil del usuario con sesión activa (persiste por sesión en memoria)
+    var perfil: Profile? = null
 }

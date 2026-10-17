@@ -12,6 +12,7 @@ import androidx.navigation.navArgument
 import com.devcore.ticketflow.AdminActivity
 import com.devcore.ticketflow.SupabaseClient
 import com.devcore.ticketflow.ui.screens.auth.LoginScreen
+import com.devcore.ticketflow.ui.screens.auth.RegisterScreen
 import com.devcore.ticketflow.ui.screens.user.CreateTicketScreen
 import com.devcore.ticketflow.ui.screens.user.TicketDetailScreen
 import com.devcore.ticketflow.ui.screens.user.UserDashboardScreen
@@ -73,11 +74,13 @@ fun AppNavigation(
         // INTEGRANTE 2: REGISTRO Y DASHBOARD USUARIO
         // ==========================================
         composable(NavRoutes.REGISTER) {
-            PlaceholderScreen(
-                title = "Registro de Usuario",
-                assignedMember = "Integrante 2",
-                route = NavRoutes.REGISTER,
-                onBack = { navController.popBackStack() }
+            RegisterScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onRegisterSuccess = {
+                    navController.navigate(NavRoutes.USER_DASHBOARD) {
+                        popUpTo(NavRoutes.LOGIN) { inclusive = true }
+                    }
+                }
             )
         }
 

@@ -65,7 +65,7 @@ fun RegisterScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is RegisterEvent.NavigateToDashboard -> onRegisterSuccess()
+                is RegisterEvent.NavigateToLogin -> onRegisterSuccess()
             }
         }
     }
@@ -150,32 +150,6 @@ fun RegisterScreen(
                         TicketFlowErrorBanner(message = error)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-
-                    // Campo de Nombre Completo
-                    TicketFlowTextField(
-                        value = state.nombre,
-                        onValueChange = viewModel::onNombreChange,
-                        label = "Nombre completo",
-                        placeholder = "Ej. Juan Pérez",
-                        errorMessage = state.nombreError,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Icono nombre",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        enabled = !state.isLoading
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Campo de Correo Electrónico
                     TicketFlowTextField(

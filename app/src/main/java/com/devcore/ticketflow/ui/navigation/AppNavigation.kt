@@ -77,8 +77,8 @@ fun AppNavigation(
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    navController.navigate(NavRoutes.USER_DASHBOARD) {
-                        popUpTo(NavRoutes.LOGIN) { inclusive = true }
+                    navController.navigate(NavRoutes.LOGIN) {
+                        popUpTo(0){ inclusive = true }
                     }
                 }
             )

@@ -191,6 +191,8 @@ class RegisterViewModel : ViewModel() {
                 try {
                     SupabaseClient.client.auth.signOut()
                     Log.d("TicketFlowRegister", "Sesión temporal cerrada después del registro")
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e // Re-throw CancellationException para mantener cancelación correcta
                 } catch (e: Exception) {
                     // Ignorar error al cerrar sesión
                     Log.d("TicketFlowRegister", "No se pudo cerrar sesión temporal: ${e.message}")
@@ -203,7 +205,7 @@ class RegisterViewModel : ViewModel() {
                         requiresEmailConfirmation = true
                     )
                 }
-                _events.emit(RegisterEvent.RegistrationCompleted(true))
+                // No emitir evento automáticamente - esperar a que el usuario confirme en el diálogo
 
             } catch (e: Exception) {
                 Log.e("TicketFlowRegister", "Fallo al registrar usuario: ${e.message}", e)

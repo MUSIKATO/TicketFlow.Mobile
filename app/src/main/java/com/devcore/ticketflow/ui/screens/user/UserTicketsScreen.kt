@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,9 +36,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -100,36 +95,6 @@ fun UserTicketsScreen(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Crear nuevo ticket"
-                )
-            }
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToDashboard,
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") }
-                )
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Ya estamos en Mis Tickets */ },
-                    icon = { Icon(Icons.Default.ConfirmationNumber, contentDescription = "Mis Tickets") },
-                    label = { Text("Mis Tickets") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryNavy,
-                        selectedTextColor = PrimaryNavy,
-                        indicatorColor = PrimaryNavy.copy(alpha = 0.12f)
-                    )
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToProfile,
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") }
                 )
             }
         }
@@ -230,13 +195,13 @@ fun UserTicketsScreen(
                     EmptyTicketsCard()
                 }
                 else -> {
-                    LazyColumn(
+                    Column(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(state.tickets.size) { index ->
+                        state.tickets.forEach { ticket ->
                             TicketCard(
-                                ticket = state.tickets[index],
-                                onClick = { onNavigateToDetail(state.tickets[index].id) }
+                                ticket = ticket,
+                                onClick = { onNavigateToDetail(ticket.id) }
                             )
                         }
                     }

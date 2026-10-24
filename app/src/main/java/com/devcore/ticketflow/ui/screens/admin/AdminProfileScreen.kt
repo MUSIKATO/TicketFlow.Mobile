@@ -21,12 +21,17 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -90,6 +95,31 @@ fun AdminProfileScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Error banner
+            state.errorMessage?.let { error ->
+                com.devcore.ticketflow.ui.components.TicketFlowErrorBanner(message = error)
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
+            // Success message
+            state.successMessage?.let { success ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF4CAF50).copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text(
+                        text = success,
+                        modifier = Modifier.padding(16.dp),
+                        color = Color(0xFF2E7D32),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
             // Información del perfil
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -120,20 +150,48 @@ fun AdminProfileScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = state.userName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
+                    if (state.isEditing) {
+                        OutlinedTextField(
+                            value = state.userName,
+                            onValueChange = viewModel::onNombreChange,
+                            label = { Text("Nombre") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isSaving,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CorporateNavy,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+                    } else {
+                        Text(
+                            text = state.userName,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = state.userEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
+                    if (state.isEditing) {
+                        OutlinedTextField(
+                            value = state.userEmail,
+                            onValueChange = viewModel::onCorreoChange,
+                            label = { Text("Correo electrónico") },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isSaving,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = CorporateNavy,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+                    } else {
+                        Text(
+                            text = state.userEmail,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -141,6 +199,32 @@ fun AdminProfileScreen(
                         role = state.userRole,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+
+                    // Botones de edición
+                    if (state.isEditing) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = viewModel::disableEditing,
+                                enabled = !state.isSaving,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Cancelar")
+                            }
+
+                            com.devcore.ticketflow.ui.components.TicketFlowButton(
+                                text = "Guardar",
+                                onClick = viewModel::confirmSaveDialog,
+                                isLoading = state.isSaving,
+                                enabled = !state.isSaving,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -156,8 +240,8 @@ fun AdminProfileScreen(
                         icon = Icons.Default.Person,
                         title = "Editar información",
                         subtitle = "Nombre y correo electrónico",
-                        onClick = { /* Pendiente de implementación */ },
-                        enabled = false
+                        onClick = viewModel::enableEditing,
+                        enabled = !state.isEditing
                     )
 
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -184,6 +268,28 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Diálogo de confirmación de guardado
+    if (state.showConfirmSaveDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissConfirmSaveDialog,
+            title = { Text("Guardar cambios") },
+            text = { Text("¿Estás seguro de que deseas guardar los cambios en tu perfil?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.dismissConfirmSaveDialog()
+                    viewModel.guardarCambios()
+                }) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissConfirmSaveDialog) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

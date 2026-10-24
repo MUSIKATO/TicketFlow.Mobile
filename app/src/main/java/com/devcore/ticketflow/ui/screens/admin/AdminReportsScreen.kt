@@ -333,6 +333,130 @@ fun AdminReportsScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Lista de equipos ordenada
+            Text(
+                text = "Incidencias por Equipo",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardStroke))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (state.equipmentList.isNotEmpty()) {
+                        state.equipmentList.forEachIndexed { index, (equipo, count) ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${index + 1}. $equipo",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "$count",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = CorporateNavy
+                                )
+                            }
+                            if (index < state.equipmentList.size - 1) {
+                                androidx.compose.material3.HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No hay datos disponibles",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Estadísticas por tipo de incidencia
+            Text(
+                text = "Distribución por Tipo de Incidencia",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardStroke))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (state.incidentTypeStats.isNotEmpty()) {
+                        state.incidentTypeStats.entries.forEachIndexed { index, (tipo, count) ->
+                            val percentage = if (state.totalTickets > 0) {
+                                (count.toFloat() / state.totalTickets * 100).toInt()
+                            } else 0
+
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = tipo,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = "$count ($percentage%)",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = TextPrimary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(8.dp)
+                                        .background(
+                                            CorporateNavy.copy(alpha = 0.1f),
+                                            RoundedCornerShape(4.dp)
+                                        )
+                                ) {
+                                    LinearProgressIndicator(
+                                        progress = { percentage / 100f },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = CorporateNavy,
+                                        trackColor = Color.Transparent
+                                    )
+                                }
+                            }
+                            if (index < state.incidentTypeStats.size - 1) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No hay datos disponibles",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

@@ -86,12 +86,13 @@ fun AppNavigation(
         composable(NavRoutes.REGISTER) {
             RegisterScreen(
                 onNavigateToLogin = {
-                    navController.popBackStack()
+                    navController.navigate(NavRoutes.LOGIN) {
+                        popUpTo(NavRoutes.LOGIN) { inclusive = true }
+                    }
                 },
                 onRegistrationCompleted = { requiresConfirmation ->
-                    // Si requiere confirmación de correo, regresar al login
-                    // Si no requiere, también regresar al login (el usuario puede iniciar sesión)
-                    navController.popBackStack()
+                    // La navegación ahora se maneja manualmente desde el diálogo de confirmación
+                    // No se usa este callback porque el diálogo permanece visible hasta que el usuario pulse el botón
                 }
             )
         }

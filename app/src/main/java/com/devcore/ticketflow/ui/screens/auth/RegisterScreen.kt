@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -77,7 +77,7 @@ fun RegisterScreen(
     }
 
     // Diálogo de confirmación de registro
-    if (state.registrationSuccess && state.requiresEmailConfirmation) {
+    if (state.registrationSuccess) {
         AlertDialog(
             onDismissRequest = { },
             title = {
@@ -87,16 +87,23 @@ fun RegisterScreen(
                 )
             },
             text = {
-                Text(
-                    text = "¡Cuenta creada correctamente!\n\nHemos enviado un correo de confirmación a ${state.email}. Por favor, revisa tu bandeja de entrada y sigue el enlace para confirmar tu cuenta.\n\nUna vez confirmado, podrás iniciar sesión.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                if (state.requiresEmailConfirmation) {
+                    Text(
+                        text = "¡Cuenta creada correctamente!\n\nHemos enviado un correo de confirmación a ${state.email}.\n\nPor favor, revisa tu bandeja de entrada y sigue el enlace para confirmar tu cuenta antes de iniciar sesión.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text(
+                        text = "¡Cuenta creada correctamente!\n\nYa puedes iniciar sesión con tu correo y contraseña.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.navegarALogin() }
                 ) {
-                    Text("Entendido")
+                    Text("Volver al inicio de sesión")
                 }
             },
             dismissButton = null
@@ -113,7 +120,7 @@ fun RegisterScreen(
                 navigationIcon = {
                     IconButton(onClick = { viewModel.navegarALogin() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Regresar al inicio de sesión"
                         )
                     }
@@ -328,7 +335,7 @@ fun RegisterScreen(
 
                     // Botón Principal
                     TicketFlowButton(
-                        text = "Crear cuenta",
+                        text = if (state.isLoading) "Creando tu cuenta..." else "Crear cuenta",
                         onClick = {
                             focusManager.clearFocus()
                             viewModel.registrarse()

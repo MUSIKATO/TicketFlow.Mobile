@@ -26,6 +26,8 @@ data class AdminReportsUiState(
     val highPriorityTickets: Int = 0,
     val topEquipment: String? = null,
     val topEquipmentCount: Int = 0,
+    val equipmentList: List<Pair<String, Int>> = emptyList(),
+    val incidentTypeStats: Map<String, Int> = emptyMap(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -119,7 +121,7 @@ class AdminReportsViewModel : ViewModel() {
                     }
                 val high = highResult.countOrNull()?.toInt() ?: 0
 
-                // Equipo con más incidencias
+                // Equipo con más incidencias y lista ordenada
                 val equipmentResult = SupabaseClient.client.postgrest.from("tickets")
                     .select {
                         "equipo"
@@ -129,6 +131,17 @@ class AdminReportsViewModel : ViewModel() {
                 val topEquipment = equipmentCounts.maxByOrNull { it.value }
                 val topEquipmentName = topEquipment?.key
                 val topEquipmentCount = topEquipment?.value ?: 0
+                val equipmentList = equipmentCounts.entries
+                    .sortedByDescending { it.value }
+                    .map { it.key to it.value }
+
+                // Estadísticas por tipo de incidencia
+                val incidentTypeResult = SupabaseClient.client.postgrest.from("tickets")
+                    .select {
+                        "tipo_incidencia"
+                    }
+                val incidentTickets = incidentTypeResult.decodeList<MutableMap<String, String>>()
+                val incidentTypeStats = incidentTickets.groupingBy { it["tipo_incidencia"] ?: "Sin clasificar" }.eachCount()
 
                 _uiState.update {
                     it.copy(
@@ -142,6 +155,8 @@ class AdminReportsViewModel : ViewModel() {
                         highPriorityTickets = high,
                         topEquipment = topEquipmentName,
                         topEquipmentCount = topEquipmentCount,
+                        equipmentList = equipmentList,
+                        incidentTypeStats = incidentTypeStats,
                         errorMessage = null
                     )
                 }

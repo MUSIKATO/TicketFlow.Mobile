@@ -41,9 +41,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -105,36 +102,6 @@ fun UserDashboardScreen(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Crear nuevo ticket"
-                )
-            }
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Ya estamos en el panel principal */ },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryNavy,
-                        selectedTextColor = PrimaryNavy,
-                        indicatorColor = PrimaryNavy.copy(alpha = 0.12f)
-                    )
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToTickets,
-                    icon = { Icon(Icons.Default.ConfirmationNumber, contentDescription = "Mis Tickets") },
-                    label = { Text("Mis Tickets") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToProfile,
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") }
                 )
             }
         }

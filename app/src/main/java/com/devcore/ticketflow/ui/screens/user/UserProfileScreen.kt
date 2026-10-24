@@ -25,10 +25,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -226,8 +228,13 @@ fun UserProfileScreen(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            isEditing = false
-                            viewModel.cargarPerfil() // Revertir cambios
+                            if (state.hasUnsavedChanges) {
+                                // Mostrar advertencia de cambios sin guardar
+                                isEditing = false
+                                viewModel.cargarPerfil() // Revertir cambios
+                            } else {
+                                isEditing = false
+                            }
                         },
                         enabled = !state.isSaving,
                         modifier = Modifier.weight(1f),
@@ -238,7 +245,7 @@ fun UserProfileScreen(
 
                     TicketFlowButton(
                         text = "Guardar",
-                        onClick = viewModel::guardarCambios,
+                        onClick = viewModel::confirmSaveDialog,
                         isLoading = state.isSaving,
                         enabled = !state.isSaving,
                         modifier = Modifier.weight(1f)
@@ -246,7 +253,7 @@ fun UserProfileScreen(
                 }
             } else {
                 OutlinedButton(
-                    onClick = viewModel::cerrarSesion,
+                    onClick = viewModel::confirmSignOutDialog,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -256,6 +263,50 @@ fun UserProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Diálogo de confirmación de guardado
+    if (state.showConfirmSaveDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissConfirmSaveDialog,
+            title = { Text("Guardar cambios") },
+            text = { Text("¿Estás seguro de que deseas guardar los cambios en tu perfil?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.dismissConfirmSaveDialog()
+                    viewModel.guardarCambios()
+                }) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissConfirmSaveDialog) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Diálogo de confirmación de cierre de sesión
+    if (state.showConfirmSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissConfirmSignOutDialog,
+            title = { Text("Cerrar sesión") },
+            text = { Text("¿Estás seguro de que deseas cerrar sesión?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.dismissConfirmSignOutDialog()
+                    viewModel.cerrarSesion()
+                }) {
+                    Text("Cerrar sesión")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissConfirmSignOutDialog) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

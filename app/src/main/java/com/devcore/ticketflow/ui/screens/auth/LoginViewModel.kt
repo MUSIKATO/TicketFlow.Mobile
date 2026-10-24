@@ -132,14 +132,18 @@ class LoginViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("TicketFlowAuth", "Fallo al iniciar sesión: ${e.message}")
                 val userFriendlyMessage = when {
+                    e.message?.contains("email_not_confirmed", ignoreCase = true) == true ||
+                    e.message?.contains("Email not confirmed", ignoreCase = true) == true ->
+                        "Debes confirmar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada y sigue el enlace de confirmación."
                     e.message?.contains("Invalid login credentials", ignoreCase = true) == true ->
                         "Correo electrónico o contraseña incorrectos"
                     e.message?.contains("network", ignoreCase = true) == true ||
                     e.message?.contains("timeout", ignoreCase = true) == true ||
-                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                    e.message?.contains("connection", ignoreCase = true) == true ->
                         "Error de conexión. Verifica tu conexión a internet"
                     else ->
-                        "No se pudo iniciar sesión. Verifica tus datos o inténtalo más tarde"
+                        "No se pudo iniciar sesión: ${e.message}"
                 }
                 _uiState.update {
                     it.copy(

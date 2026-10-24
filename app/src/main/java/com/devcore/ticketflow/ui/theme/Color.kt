@@ -2,44 +2,93 @@ package com.devcore.ticketflow.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paleta base extraída de res/values/colors.xml
-val PrimaryNavy = Color(0xFF122944)
-val PrimaryNavyDark = Color(0xFF0F2236)
-val PrimaryNavyLight = Color(0xFF1E3A5F)
+// ==========================================
+// PALETA CORPORATIVA PERFUMERÍA VIP
+// ==========================================
 
-val BgScreen = Color(0xFFF8F9FD)
-val BgScreenDark = Color(0xFF0B131E)
+// Azul corporativo oscuro
+val CorporateNavy = Color(0xFF1A365D)
+val CorporateNavyDark = Color(0xFF142D4A)
+val CorporateNavyLight = Color(0xFF244872)
 
+// Azul secundario
+val CorporateBlue = Color(0xFF2B6CB0)
+val CorporateBlueDark = Color(0xFF235596)
+val CorporateBlueLight = Color(0xFF3B82F6)
+
+// Fondo general
+val BgScreen = Color(0xFFF8FAFC)
+val BgScreenDark = Color(0xFF0F172A)
+
+// Superficies y tarjetas
 val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF111E2E)
+val SurfaceDark = Color(0xFF1E293B)
 val SurfaceVariantDark = Color(0xFF1A2B40)
 
-val TextPrimary = Color(0xFF1E293B)
+// Texto principal
+val TextPrimary = Color(0xFF0F172A)
 val TextSecondary = Color(0xFF64748B)
 val TextPrimaryDark = Color(0xFFF1F5F9)
 val TextSecondaryDark = Color(0xFF94A3B8)
 
-val CardStroke = Color(0xFFE2E8F0)
-val CardStrokeDark = Color(0xFF26384D)
+// Bordes discretos
+val BorderColor = Color(0xFFE2E8F0)
+val BorderColorDark = Color(0xFF334155)
 
-// Estados de Incidencia / Prioridad
-val StatusCritical = Color(0xFFD32F2F)
-val StatusCriticalBg = Color(0xFFFFEBEE)
+// ==========================================
+// ESTADOS DE PRIORIDAD (VERDE, ÁMBAR, NARANJA, ROJO)
+// ==========================================
 
-val StatusAmber = Color(0xFFF57C00)
-val StatusAmberBg = Color(0xFFFFF3E0)
+val PriorityLow = Color(0xFF10B981)          // Verde
+val PriorityLowBg = Color(0xFFD1FAE5)
 
-val StatusInfoBlue = Color(0xFF1976D2)
-val StatusInfoBlueBg = Color(0xFFE3F2FD)
+val PriorityMedium = Color(0xFFF59E0B)        // Amarillo/ámbar
+val PriorityMediumBg = Color(0xFFFEF3C7)
 
-val StatusSuccessGreen = Color(0xFF388E3C)
-val StatusSuccessGreenBg = Color(0xFFE8F5E9)
+val PriorityHigh = Color(0xFFF97316)          // Naranja
+val PriorityHighBg = Color(0xFFFFEDD5)
 
-val StatusPending = Color(0xFFF9A825)
-val StatusPendingBg = Color(0xFFFFFDE7)
+val PriorityCritical = Color(0xFFEF4444)      // Rojo
+val PriorityCriticalBg = Color(0xFFFEE2E2)
 
-val StatusOrange = Color(0xFFE65100)
-val StatusOrangeBg = Color(0xFFFFF3E0)
+// ==========================================
+// ESTADOS DE TICKETS (AMARILLO, AZUL, VERDE)
+// ==========================================
 
-val RedButton = Color(0xFFC62828)
-val RedButtonStroke = Color(0xFFE57373)
+val TicketStatusPending = Color(0xFFFBBF24)          // Amarillo suave
+val TicketStatusPendingBg = Color(0xFFFFF7ED)
+
+val TicketStatusInProgress = Color(0xFF3B82F6)      // Azul suave
+val TicketStatusInProgressBg = Color(0xFFDBEAFE)
+
+val TicketStatusResolved = Color(0xFF10B981)        // Verde suave
+val TicketStatusResolvedBg = Color(0xFFD1FAE5)
+
+// ==========================================
+// COLORES COMPATIBLES (para compatibilidad con código existente)
+// ==========================================
+
+val PrimaryNavy = CorporateNavy
+val PrimaryNavyDark = CorporateNavyDark
+val PrimaryNavyLight = CorporateNavyLight
+
+val StatusCritical = PriorityCritical
+val StatusCriticalBg = PriorityCriticalBg
+
+val StatusAmber = PriorityMedium
+val StatusAmberBg = PriorityMediumBg
+
+val StatusInfoBlue = TicketStatusInProgress
+val StatusInfoBlueBg = TicketStatusInProgressBg
+
+val StatusSuccessGreen = PriorityLow
+val StatusSuccessGreenBg = PriorityLowBg
+
+val StatusPending = TicketStatusPending
+val StatusPendingBg = TicketStatusPendingBg
+
+val StatusOrange = PriorityHigh
+val StatusOrangeBg = PriorityHighBg
+
+val CardStroke = BorderColor
+val CardStrokeDark = BorderColorDark

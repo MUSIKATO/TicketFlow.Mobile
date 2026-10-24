@@ -8,6 +8,7 @@ import com.devcore.ticketflow.Profile
 import com.devcore.ticketflow.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.user.UserSession
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,20 +20,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class RegisterUiState(
-    val correo: String = "",
+    val nombre: String = "",
+    val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
-    val correoError: String? = null,
+    val nombreError: String? = null,
+    val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
     val generalError: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val registrationSuccess: Boolean = false,
+    val requiresEmailConfirmation: Boolean = false
 )
 
 sealed interface RegisterEvent {
     data object NavigateToLogin : RegisterEvent
+    data class RegistrationCompleted(val requiresConfirmation: Boolean) : RegisterEvent
 }
 
 class RegisterViewModel : ViewModel() {
@@ -43,11 +49,21 @@ class RegisterViewModel : ViewModel() {
     private val _events = MutableSharedFlow<RegisterEvent>()
     val events: SharedFlow<RegisterEvent> = _events.asSharedFlow()
 
-    fun onCorreoChange(newCorreo: String) {
+    fun onNombreChange(newNombre: String) {
         _uiState.update {
             it.copy(
-                correo = newCorreo,
-                correoError = null,
+                nombre = newNombre.trim(),
+                nombreError = null,
+                generalError = null
+            )
+        }
+    }
+
+    fun onEmailChange(newEmail: String) {
+        _uiState.update {
+            it.copy(
+                email = newEmail.trim(),
+                emailError = null,
                 generalError = null
             )
         }
@@ -58,6 +74,7 @@ class RegisterViewModel : ViewModel() {
             it.copy(
                 password = newPassword,
                 passwordError = null,
+                confirmPasswordError = null,
                 generalError = null
             )
         }
@@ -85,26 +102,35 @@ class RegisterViewModel : ViewModel() {
         _uiState.update { it.copy(generalError = null) }
     }
 
-    fun registrarUsuario() {
-        val correo = _uiState.value.correo.trim()
+    fun registrarse() {
+        val nombre = _uiState.value.nombre.trim()
+        val email = _uiState.value.email.trim()
         val password = _uiState.value.password
         val confirmPassword = _uiState.value.confirmPassword
 
+        // Validaciones
         var hasError = false
-        var correoErr: String? = null
+        var nombreErr: String? = null
+        var emailErr: String? = null
         var passwordErr: String? = null
-        var confirmPasswordErr: String? = null
+        var confirmErr: String? = null
 
-        // 1. Validar correo
-        if (correo.isEmpty()) {
-            correoErr = "El correo electrónico es requerido"
+        if (nombre.isEmpty()) {
+            nombreErr = "El nombre es requerido"
             hasError = true
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            correoErr = "Introduce un correo electrónico válido"
+        } else if (nombre.length < 2) {
+            nombreErr = "El nombre debe tener al menos 2 caracteres"
             hasError = true
         }
 
-        // 2. Validar contraseña
+        if (email.isEmpty()) {
+            emailErr = "El correo electrónico es requerido"
+            hasError = true
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailErr = "Introduce un correo electrónico válido"
+            hasError = true
+        }
+
         if (password.isEmpty()) {
             passwordErr = "La contraseña es requerida"
             hasError = true
@@ -113,21 +139,21 @@ class RegisterViewModel : ViewModel() {
             hasError = true
         }
 
-        // 3. Validar confirmación de contraseña
         if (confirmPassword.isEmpty()) {
-            confirmPasswordErr = "Confirma tu contraseña"
+            confirmErr = "La confirmación de contraseña es requerida"
             hasError = true
         } else if (password != confirmPassword) {
-            confirmPasswordErr = "Las contraseñas no coinciden"
+            confirmErr = "Las contraseñas no coinciden"
             hasError = true
         }
 
         if (hasError) {
             _uiState.update {
                 it.copy(
-                    correoError = correoErr,
+                    nombreError = nombreErr,
+                    emailError = emailErr,
                     passwordError = passwordErr,
-                    confirmPasswordError = confirmPasswordErr,
+                    confirmPasswordError = confirmErr,
                     generalError = null
                 )
             }
@@ -138,7 +164,8 @@ class RegisterViewModel : ViewModel() {
             it.copy(
                 isLoading = true,
                 generalError = null,
-                correoError = null,
+                nombreError = null,
+                emailError = null,
                 passwordError = null,
                 confirmPasswordError = null
             )
@@ -146,35 +173,59 @@ class RegisterViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // 1. Registro en Supabase Auth (envía email de confirmación)
+                Log.d("TicketFlowRegister", "Iniciando registro para: $email")
+
+                // 1. Registro en Supabase Auth
                 SupabaseClient.client.auth.signUpWith(Email) {
-                    this.email = correo
+                    this.email = email
                     this.password = password
                 }
 
-                // 2. Si el registro fue exitoso (no lanzó excepción), navega al login
-                // El perfil se creará en el login tras confirmar email
-                _uiState.update { it.copy(isLoading = false) }
-                _events.emit(RegisterEvent.NavigateToLogin)
+                Log.d("TicketFlowRegister", "Registro completado exitosamente para: $email")
+
+                // 2. El trigger en Supabase crea automáticamente el perfil
+                // El usuario debe confirmar su correo antes de poder iniciar sesión
+
+                // 3. Cerrar cualquier sesión temporal que pueda haberse creado
+                // Esto asegura que el usuario no pueda iniciar sesión sin confirmar correo
+                try {
+                    SupabaseClient.client.auth.signOut()
+                    Log.d("TicketFlowRegister", "Sesión temporal cerrada después del registro")
+                } catch (e: Exception) {
+                    // Ignorar error al cerrar sesión
+                    Log.d("TicketFlowRegister", "No se pudo cerrar sesión temporal: ${e.message}")
+                }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        registrationSuccess = true,
+                        requiresEmailConfirmation = true
+                    )
+                }
+                _events.emit(RegisterEvent.RegistrationCompleted(true))
 
             } catch (e: Exception) {
-                Log.e("TicketFlowRegister", "Fallo en el registro de usuario", e)
+                Log.e("TicketFlowRegister", "Fallo al registrar usuario: ${e.message}", e)
+                Log.e("TicketFlowRegister", "Stack trace:", e)
                 val userFriendlyMessage = when {
-                    e.message?.contains("email_not_confirmed", ignoreCase = true) == true ->
-                        "Registro exitoso. Revisa tu email y confirma la cuenta para poder iniciar sesión."
-
-                    e.message?.contains("already registered", ignoreCase = true) == true ||
-                    e.message?.contains("User already registered", ignoreCase = true) == true ->
-                        "El correo electrónico ya está registrado en el sistema"
-                    e.message?.contains("over_email_send_rate_limit", ignoreCase = true) == true ||
-                    e.message?.contains("rate limit", ignoreCase = true) == true ->
-                        "Demasiados intentos. Límite de envío de correos excedido en Supabase. Espera unos minutos o desactiva 'Confirm email' en la consola de Supabase"
+                    e.message?.contains("User already registered", ignoreCase = true) == true ||
+                    e.message?.contains("duplicate", ignoreCase = true) == true ||
+                    e.message?.contains("duplicate key", ignoreCase = true) == true ->
+                        "Este correo electrónico ya está registrado"
+                    e.message?.contains("weak password", ignoreCase = true) == true ||
+                    e.message?.contains("password", ignoreCase = true) == true ->
+                        "La contraseña es demasiado débil. Usa al menos 6 caracteres"
                     e.message?.contains("network", ignoreCase = true) == true ||
                     e.message?.contains("timeout", ignoreCase = true) == true ||
-                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                    e.message?.contains("connection", ignoreCase = true) == true ->
                         "Error de conexión. Verifica tu conexión a internet"
+                    e.message?.contains("email_not_confirmed", ignoreCase = true) == true ||
+                    e.message?.contains("Email not confirmed", ignoreCase = true) == true ->
+                        "Error inesperado: la librería intentó iniciar sesión. Por favor intenta de nuevo."
                     else ->
-                        "No se pudo completar el registro: ${e.localizedMessage ?: "Error desconocido"}"
+                        "No se pudo completar el registro: ${e.message}"
                 }
                 _uiState.update {
                     it.copy(
@@ -183,6 +234,12 @@ class RegisterViewModel : ViewModel() {
                     )
                 }
             }
+        }
+    }
+
+    fun navegarALogin() {
+        viewModelScope.launch {
+            _events.emit(RegisterEvent.NavigateToLogin)
         }
     }
 }

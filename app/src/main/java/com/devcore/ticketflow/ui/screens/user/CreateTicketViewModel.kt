@@ -34,11 +34,7 @@ data class CreateTicketUiState(
     val fotoFile: File? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val successMessage: String? = null,
-    val equipoError: String? = null,
-    val tipoIncidenciaError: String? = null,
-    val descripcionError: String? = null,
-    val prioridadError: String? = null
+    val successMessage: String? = null
 )
 
 sealed interface CreateTicketEvent {
@@ -57,26 +53,25 @@ class CreateTicketViewModel : ViewModel() {
         _uiState.update {
             it.copy(
                 equipo = equipo,
-                mostrarEquipoOtro = equipo == "Otro",
-                equipoError = null
+                mostrarEquipoOtro = equipo == "Otro"
             )
         }
     }
 
     fun onEquipoOtroChange(text: String) {
-        _uiState.update { it.copy(equipoOtro = text, equipoError = null) }
+        _uiState.update { it.copy(equipoOtro = text) }
     }
 
     fun onTipoIncidenciaChange(text: String) {
-        _uiState.update { it.copy(tipoIncidencia = text.take(60), tipoIncidenciaError = null) }
+        _uiState.update { it.copy(tipoIncidencia = text) }
     }
 
     fun onDescripcionChange(text: String) {
-        _uiState.update { it.copy(descripcion = text.take(500), descripcionError = null) }
+        _uiState.update { it.copy(descripcion = text) }
     }
 
     fun onPrioridadChange(prioridad: String) {
-        _uiState.update { it.copy(prioridad = prioridad, prioridadError = null) }
+        _uiState.update { it.copy(prioridad = prioridad) }
     }
 
     fun onFotoSeleccionada(file: File?) {
@@ -85,10 +80,6 @@ class CreateTicketViewModel : ViewModel() {
 
     fun onEliminarFoto() {
         _uiState.update { it.copy(fotoFile = null) }
-    }
-
-    fun onError(message: String) {
-        _uiState.update { it.copy(errorMessage = message) }
     }
 
     fun dismissError() {
@@ -112,39 +103,20 @@ class CreateTicketViewModel : ViewModel() {
             return
         }
 
-        val equipoError = when {
-            state.equipo.isBlank() -> "Selecciona un equipo"
-            state.mostrarEquipoOtro && state.equipoOtro.isBlank() -> "Escribe el equipo afectado"
-            else -> null
+        val equipoFinal = if (state.mostrarEquipoOtro) {
+            state.equipoOtro.trim()
+        } else {
+            state.equipo.trim()
         }
-        val tipoError = when {
-            state.tipoIncidencia.isBlank() -> "Indica el tipo de incidencia"
-            state.tipoIncidencia.trim().length < 3 -> "Escribe al menos 3 caracteres"
-            else -> null
-        }
-        val descripcionError = when {
-            state.descripcion.isBlank() -> "Describe el problema"
-            state.descripcion.trim().length < 10 -> "Escribe al menos 10 caracteres"
-            else -> null
-        }
-        val prioridadError = if (state.prioridad == null) "Selecciona una prioridad" else null
 
-        if (equipoError != null || tipoError != null ||
-            descripcionError != null || prioridadError != null
+        if (equipoFinal.isEmpty() || equipoFinal == "Seleccione un equipo" ||
+            state.tipoIncidencia.trim().isEmpty() ||
+            state.descripcion.trim().isEmpty() ||
+            state.prioridad == null
         ) {
-            _uiState.update {
-                it.copy(
-                    equipoError = equipoError,
-                    tipoIncidenciaError = tipoError,
-                    descripcionError = descripcionError,
-                    prioridadError = prioridadError,
-                    errorMessage = "Revisa los campos marcados en rojo"
-                )
-            }
+            _uiState.update { it.copy(errorMessage = "Completa todos los campos obligatorios") }
             return
         }
-
-        val equipoFinal = if (state.mostrarEquipoOtro) state.equipoOtro.trim() else state.equipo.trim()
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
@@ -154,7 +126,7 @@ class CreateTicketViewModel : ViewModel() {
                     withContext(Dispatchers.IO) {
                         val path = "evidencia/${System.currentTimeMillis()}.jpg"
                         val bucket = SupabaseClient.client.storage.from("foto_ticket")
-                        bucket.upload(path, file) { upsert = true }
+                        bucket.upload(path, file)
                         bucket.publicUrl(path).toString()
                     }
                 }

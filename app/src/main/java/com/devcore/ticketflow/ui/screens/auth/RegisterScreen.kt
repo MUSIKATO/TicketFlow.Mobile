@@ -1,6 +1,6 @@
 package com.devcore.ticketflow.ui.screens.auth
 
-import  androidx.compose.foundation.background
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -25,14 +24,18 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -52,10 +55,12 @@ import com.devcore.ticketflow.ui.components.TicketFlowButton
 import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.components.TicketFlowTextField
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("FunctionName")
 fun RegisterScreen(
-    onNavigateBack: () -> Unit,
-    onRegisterSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onRegistrationCompleted: (requiresConfirmation: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: RegisterViewModel = viewModel()
 ) {
@@ -65,53 +70,93 @@ fun RegisterScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is RegisterEvent.NavigateToLogin -> onRegisterSuccess()
+                is RegisterEvent.NavigateToLogin -> onNavigateToLogin()
+                is RegisterEvent.RegistrationCompleted -> onRegistrationCompleted(event.requiresConfirmation)
             }
         }
+    }
+
+    // Diálogo de confirmación de registro
+    if (state.registrationSuccess && state.requiresEmailConfirmation) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = {
+                Text(
+                    text = "Registro exitoso",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Text(
+                    text = "¡Cuenta creada correctamente!\n\nHemos enviado un correo de confirmación a ${state.email}. Por favor, revisa tu bandeja de entrada y sigue el enlace para confirmar tu cuenta.\n\nUna vez confirmado, podrás iniciar sesión.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.navegarALogin() }
+                ) {
+                    Text("Entendido")
+                }
+            },
+            dismissButton = null
+        )
     }
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .imePadding(),
-        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onNavigateBack,
-                    enabled = !state.isLoading
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Crear nueva cuenta",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.Bold
+            TopAppBar(
+                title = { Text("Crear cuenta", style = MaterialTheme.typography.titleLarge) },
+                navigationIcon = {
+                    IconButton(onClick = { viewModel.navegarALogin() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Regresar al inicio de sesión"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
-            }
-        }
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
+            // Espacio para el logo
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Título
+            Text(
+                text = "Registro de Usuario",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
 
+            Text(
+                text = "Únete a TicketFlow para gestionar tus tickets de soporte",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Tarjeta de Formulario
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -126,38 +171,45 @@ fun RegisterScreen(
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = "Registro de Usuario",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Completa tus datos para acceder al sistema de soporte TicketFlow.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     // Banner de error general
                     state.generalError?.let { error ->
                         TicketFlowErrorBanner(message = error)
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
+                    // Campo de Nombre Completo
+                    TicketFlowTextField(
+                        value = state.nombre,
+                        onValueChange = viewModel::onNombreChange,
+                        label = "Nombre completo",
+                        placeholder = "Tu nombre completo",
+                        errorMessage = state.nombreError,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Icono nombre",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        ),
+                        enabled = !state.isLoading
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     // Campo de Correo Electrónico
                     TicketFlowTextField(
-                        value = state.correo,
-                        onValueChange = viewModel::onCorreoChange,
+                        value = state.email,
+                        onValueChange = viewModel::onEmailChange,
                         label = "Correo electrónico",
                         placeholder = "ejemplo@perfumeria.com",
-                        errorMessage = state.correoError,
+                        errorMessage = state.emailError,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Email,
@@ -182,7 +234,7 @@ fun RegisterScreen(
                         value = state.password,
                         onValueChange = viewModel::onPasswordChange,
                         label = "Contraseña",
-                        placeholder = "Mínimo 6 caracteres",
+                        placeholder = "••••••••",
                         errorMessage = state.passwordError,
                         leadingIcon = {
                             Icon(
@@ -229,7 +281,7 @@ fun RegisterScreen(
                         value = state.confirmPassword,
                         onValueChange = viewModel::onConfirmPasswordChange,
                         label = "Confirmar contraseña",
-                        placeholder = "Repite tu contraseña",
+                        placeholder = "••••••••",
                         errorMessage = state.confirmPasswordError,
                         leadingIcon = {
                             Icon(
@@ -247,9 +299,9 @@ fun RegisterScreen(
                                         Icons.Default.VisibilityOff
                                     },
                                     contentDescription = if (state.isConfirmPasswordVisible) {
-                                        "Ocultar confirmar contraseña"
+                                        "Ocultar contraseña"
                                     } else {
-                                        "Mostrar confirmar contraseña"
+                                        "Mostrar contraseña"
                                     }
                                 )
                             }
@@ -266,7 +318,7 @@ fun RegisterScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 focusManager.clearFocus()
-                                viewModel.registrarUsuario()
+                                viewModel.registrarse()
                             }
                         ),
                         enabled = !state.isLoading
@@ -274,12 +326,12 @@ fun RegisterScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón Principal de Registro
+                    // Botón Principal
                     TicketFlowButton(
-                        text = "Registrarse",
+                        text = "Crear cuenta",
                         onClick = {
                             focusManager.clearFocus()
-                            viewModel.registrarUsuario()
+                            viewModel.registrarse()
                         },
                         isLoading = state.isLoading,
                         enabled = !state.isLoading
@@ -289,7 +341,17 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Enlace para volver al Login
+            // Mensaje de información sobre términos
+            Text(
+                text = "Al registrarte, aceptas nuestros términos y condiciones de uso.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Acceso a Login
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -299,7 +361,7 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 TextButton(
-                    onClick = onNavigateBack,
+                    onClick = { viewModel.navegarALogin() },
                     enabled = !state.isLoading
                 ) {
                     Text(

@@ -117,7 +117,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "TicketFlow",
+                text = "TicketFlow Admin",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
@@ -126,7 +126,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Soporte Técnico de Perfumería VIP",
+                text = "Bienvenido de nuevo al panel de administración. Ingresa tus credenciales para continuar.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

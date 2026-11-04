@@ -1,6 +1,7 @@
 package com.devcore.ticketflow.ui.screens.user
 
 import android.util.Log
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devcore.ticketflow.Profile
@@ -25,7 +26,10 @@ data class UserProfileUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val showConfirmSaveDialog: Boolean = false,
+    val showConfirmSignOutDialog: Boolean = false,
+    val hasUnsavedChanges: Boolean = false
 )
 
 sealed interface UserProfileEvent {
@@ -40,16 +44,24 @@ class UserProfileViewModel : ViewModel() {
     private val _events = kotlinx.coroutines.flow.MutableSharedFlow<UserProfileEvent>()
     val events = _events
 
+    // Valores originales para detectar cambios
+    private var originalNombre = ""
+    private var originalCorreo = ""
+
     init {
         cargarPerfil()
     }
 
     fun onNombreChange(nombre: String) {
-        _uiState.update { it.copy(nombre = nombre) }
+        _uiState.update { 
+            it.copy(nombre = nombre, hasUnsavedChanges = detectarCambios(nombre, it.correo))
+        }
     }
 
     fun onCorreoChange(correo: String) {
-        _uiState.update { it.copy(correo = correo) }
+        _uiState.update { 
+            it.copy(correo = correo, hasUnsavedChanges = detectarCambios(it.nombre, correo))
+        }
     }
 
     fun dismissError() {
@@ -60,6 +72,26 @@ class UserProfileViewModel : ViewModel() {
         _uiState.update { it.copy(successMessage = null) }
     }
 
+    fun dismissConfirmSaveDialog() {
+        _uiState.update { it.copy(showConfirmSaveDialog = false) }
+    }
+
+    fun dismissConfirmSignOutDialog() {
+        _uiState.update { it.copy(showConfirmSignOutDialog = false) }
+    }
+
+    fun confirmSaveDialog() {
+        _uiState.update { it.copy(showConfirmSaveDialog = true) }
+    }
+
+    fun confirmSignOutDialog() {
+        _uiState.update { it.copy(showConfirmSignOutDialog = true) }
+    }
+
+    private fun detectarCambios(nombre: String, correo: String): Boolean {
+        return nombre.trim() != originalNombre || correo.trim() != originalCorreo
+    }
+
     private fun obtenerUserId(): String? {
         return SupabaseClient.perfil?.id ?: SupabaseClient.client.auth.currentUserOrNull()?.id
     }
@@ -67,6 +99,8 @@ class UserProfileViewModel : ViewModel() {
     fun cargarPerfil() {
         val perfil = SupabaseClient.perfil
         if (perfil != null) {
+            originalNombre = perfil.nombre
+            originalCorreo = perfil.correo
             _uiState.update {
                 it.copy(
                     nombre = perfil.nombre,
@@ -95,6 +129,8 @@ class UserProfileViewModel : ViewModel() {
                     }.decodeSingle<Profile>()
                 }
 
+                originalNombre = perfil.nombre
+                originalCorreo = perfil.correo
                 SupabaseClient.perfil = perfil
 
                 _uiState.update {
@@ -126,8 +162,32 @@ class UserProfileViewModel : ViewModel() {
             return
         }
 
-        if (state.nombre.trim().isEmpty() || state.correo.trim().isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "El nombre y el correo son obligatorios") }
+        val nombreTrimmed = state.nombre.trim()
+        val correoTrimmed = state.correo.trim()
+
+        // Validaciones
+        if (nombreTrimmed.isEmpty()) {
+            _uiState.update { it.copy(errorMessage = "El nombre es obligatorio") }
+            return
+        }
+
+        if (nombreTrimmed.length < 2) {
+            _uiState.update { it.copy(errorMessage = "El nombre debe tener al menos 2 caracteres") }
+            return
+        }
+
+        if (nombreTrimmed.length > 100) {
+            _uiState.update { it.copy(errorMessage = "El nombre no puede tener más de 100 caracteres") }
+            return
+        }
+
+        if (correoTrimmed.isEmpty()) {
+            _uiState.update { it.copy(errorMessage = "El correo electrónico es obligatorio") }
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(correoTrimmed).matches()) {
+            _uiState.update { it.copy(errorMessage = "El formato del correo electrónico no es válido") }
             return
         }
 
@@ -136,8 +196,8 @@ class UserProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val payload = buildJsonObject {
-                    put("nombre", JsonPrimitive(state.nombre.trim()))
-                    put("correo", JsonPrimitive(state.correo.trim()))
+                    put("nombre", JsonPrimitive(nombreTrimmed))
+                    put("correo", JsonPrimitive(correoTrimmed))
                 }
 
                 withContext(Dispatchers.IO) {
@@ -147,14 +207,18 @@ class UserProfileViewModel : ViewModel() {
 
                 // Actualizar en memoria
                 SupabaseClient.perfil = SupabaseClient.perfil?.copy(
-                    nombre = state.nombre.trim(),
-                    correo = state.correo.trim()
+                    nombre = nombreTrimmed,
+                    correo = correoTrimmed
                 )
+
+                originalNombre = nombreTrimmed
+                originalCorreo = correoTrimmed
 
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        successMessage = "Información actualizada correctamente"
+                        successMessage = "Información actualizada correctamente",
+                        hasUnsavedChanges = false
                     )
                 }
             } catch (e: Exception) {

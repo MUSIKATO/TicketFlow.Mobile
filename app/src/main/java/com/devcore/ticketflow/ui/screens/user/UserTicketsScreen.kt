@@ -36,9 +36,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,14 +54,16 @@ import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.components.TicketFlowLoading
 import com.devcore.ticketflow.ui.theme.CardStroke
 import com.devcore.ticketflow.ui.theme.PrimaryNavy
-import com.devcore.ticketflow.ui.theme.StatusAmber
-import com.devcore.ticketflow.ui.theme.StatusAmberBg
-import com.devcore.ticketflow.ui.theme.StatusCritical
-import com.devcore.ticketflow.ui.theme.StatusCriticalBg
+import com.devcore.ticketflow.ui.theme.PriorityCritical
+import com.devcore.ticketflow.ui.theme.PriorityCriticalBg
+import com.devcore.ticketflow.ui.theme.PriorityHigh
+import com.devcore.ticketflow.ui.theme.PriorityHighBg
+import com.devcore.ticketflow.ui.theme.PriorityLow
+import com.devcore.ticketflow.ui.theme.PriorityLowBg
+import com.devcore.ticketflow.ui.theme.PriorityMedium
+import com.devcore.ticketflow.ui.theme.PriorityMediumBg
 import com.devcore.ticketflow.ui.theme.StatusInfoBlue
 import com.devcore.ticketflow.ui.theme.StatusInfoBlueBg
-import com.devcore.ticketflow.ui.theme.StatusOrange
-import com.devcore.ticketflow.ui.theme.StatusOrangeBg
 import com.devcore.ticketflow.ui.theme.StatusPending
 import com.devcore.ticketflow.ui.theme.StatusPendingBg
 import com.devcore.ticketflow.ui.theme.StatusSuccessGreen
@@ -96,36 +95,6 @@ fun UserTicketsScreen(
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Crear nuevo ticket"
-                )
-            }
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
-            ) {
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToDashboard,
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-                    label = { Text("Inicio") }
-                )
-                NavigationBarItem(
-                    selected = true,
-                    onClick = { /* Ya estamos en Mis Tickets */ },
-                    icon = { Icon(Icons.Default.ConfirmationNumber, contentDescription = "Mis Tickets") },
-                    label = { Text("Mis Tickets") },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = PrimaryNavy,
-                        selectedTextColor = PrimaryNavy,
-                        indicatorColor = PrimaryNavy.copy(alpha = 0.12f)
-                    )
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = onNavigateToProfile,
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                    label = { Text("Perfil") }
                 )
             }
         }
@@ -427,9 +396,9 @@ private fun EmptyTicketsCard() {
 
 private fun prioridadColor(prioridad: String): Pair<Color, Color> = when (prioridad.lowercase()) {
     "baja" -> StatusSuccessGreen to StatusSuccessGreenBg
-    "media" -> StatusAmber to StatusAmberBg
-    "alta" -> StatusOrange to StatusOrangeBg
-    "critica", "crítica" -> StatusCritical to StatusCriticalBg
+    "media" -> PriorityMedium to PriorityMediumBg
+    "alta" -> PriorityHigh to PriorityHighBg
+    "critica", "crítica" -> PriorityCritical to PriorityCriticalBg
     else -> TextSecondary to CardStroke
 }
 

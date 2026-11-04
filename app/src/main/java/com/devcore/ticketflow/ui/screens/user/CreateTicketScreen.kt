@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -32,6 +33,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -68,6 +71,14 @@ import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.theme.PrimaryNavy
 import com.devcore.ticketflow.ui.theme.TextPrimary
 import com.devcore.ticketflow.ui.theme.TextSecondary
+import com.devcore.ticketflow.ui.theme.PriorityLow
+import com.devcore.ticketflow.ui.theme.PriorityLowBg
+import com.devcore.ticketflow.ui.theme.PriorityMedium
+import com.devcore.ticketflow.ui.theme.PriorityMediumBg
+import com.devcore.ticketflow.ui.theme.PriorityHigh
+import com.devcore.ticketflow.ui.theme.PriorityHighBg
+import com.devcore.ticketflow.ui.theme.PriorityCritical
+import com.devcore.ticketflow.ui.theme.PriorityCriticalBg
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -82,42 +93,41 @@ fun CreateTicketScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Lista de equipos del XML
+
     val equipos = remember {
         context.resources.getStringArray(R.array.opciones_equipos).toList()
     }
 
     var expanded by remember { mutableStateOf(false) }
+    var photoFile by remember { mutableStateOf<File?>(null) }
 
-    // Launcher para tomar foto (desactivado por ahora)
-    // TODO: Implementar captura de foto con ContentResolver cuando se active la funcionalidad
-    /*
+    // Launcher para tomar foto
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
-            // En Compose no usamos FileProvider de la misma forma, simplificamos sin foto por ahora
+        if (success && photoFile != null) {
+            viewModel.onFotoSeleccionada(photoFile)
         }
     }
-    */
 
-    // Launcher de permisos (desactivado por ahora)
-    /*
+    // Launcher de permisos de cámara
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             // Crear archivo temporal
-            val photoFile = File(context.cacheDir, "foto_ticket_${System.currentTimeMillis()}.jpg")
+            val newPhotoFile = File(context.cacheDir, "foto_ticket_${System.currentTimeMillis()}.jpg")
+            photoFile = newPhotoFile
             val photoUri = androidx.core.content.FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
-                photoFile
+                newPhotoFile
             )
             cameraLauncher.launch(photoUri)
+        } else {
+            // Permiso denegado - mostrar mensaje (opcional, por ahora no hacemos nada)
         }
     }
-    */
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -178,48 +188,39 @@ fun CreateTicketScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = state.equipo,
-                onValueChange = { viewModel.onEquipoChange(it) },
-                label = { Text("Seleccione un equipo") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                readOnly = true,
-                trailingIcon = {
-                    androidx.compose.material.icons.Icons.Default.ArrowDropDown.let { icon ->
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "Desplegar"
-                        )
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = PrimaryNavy,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = state.equipo,
+                    onValueChange = { viewModel.onEquipoChange(it) },
+                    label = { Text("Seleccione un equipo") },
+                    readOnly = false,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimaryNavy,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
-            )
-
-            if (expanded) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        equipos.forEach { opcion ->
-                            androidx.compose.material3.Text(
-                                text = opcion,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        viewModel.onEquipoChange(opcion)
-                                        expanded = false
-                                    }
-                                    .padding(16.dp),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
+                    equipos.forEach { opcion ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(opcion) },
+                            onClick = {
+                                viewModel.onEquipoChange(opcion)
+                                expanded = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -322,7 +323,7 @@ fun CreateTicketScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Evidencia (simplificado sin funcionalidad de cámara por ahora)
+            // Evidencia
             Text(
                 text = "Evidencia (Opcional)",
                 style = MaterialTheme.typography.bodyMedium,
@@ -331,32 +332,99 @@ fun CreateTicketScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = CardDefaults.outlinedCardBorder().copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline)
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            if (state.fotoFile != null) {
+                // Vista previa de la foto
+                val currentPhotoFile = state.fotoFile!!
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline)
+                    )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        tint = TextSecondary.copy(alpha = 0.5f),
-                        modifier = Modifier.size(48.dp)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        AsyncImage(
+                            model = androidx.core.content.FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                currentPhotoFile
+                            ),
+                            contentDescription = "Vista previa de la evidencia",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                        IconButton(
+                            onClick = viewModel::onEliminarFoto,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Eliminar fotografía",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Botón para tomar foto
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            } else {
+                                // Android < 6 no requiere permiso de cámara explícito
+                                val newPhotoFile = File(context.cacheDir, "foto_ticket_${System.currentTimeMillis()}.jpg")
+                                photoFile = newPhotoFile
+                                val photoUri = androidx.core.content.FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    newPhotoFile
+                                )
+                                cameraLauncher.launch(photoUri)
+                            }
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(PrimaryNavy)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Funcionalidad de cámara en desarrollo",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            tint = PrimaryNavy,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Tomar fotografía",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Toca para abrir la cámara",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
                 }
             }
 
@@ -383,6 +451,14 @@ private fun prioridadChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val (selectedColor, selectedBg) = when (label) {
+        "Baja" -> PriorityLow to PriorityLowBg
+        "Media" -> PriorityMedium to PriorityMediumBg
+        "Alta" -> PriorityHigh to PriorityHighBg
+        "Crítica" -> PriorityCritical to PriorityCriticalBg
+        else -> PrimaryNavy to PrimaryNavy.copy(alpha = 0.12f)
+    }
+
     FilterChip(
         selected = selected,
         onClick = onClick,
@@ -396,8 +472,8 @@ private fun prioridadChip(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = PrimaryNavy,
-            selectedLabelColor = Color.White,
+            selectedContainerColor = selectedBg,
+            selectedLabelColor = selectedColor,
             containerColor = MaterialTheme.colorScheme.surface,
             labelColor = TextSecondary
         ),
@@ -405,7 +481,7 @@ private fun prioridadChip(
             enabled = true,
             selected = selected,
             borderColor = MaterialTheme.colorScheme.outline,
-            selectedBorderColor = PrimaryNavy
+            selectedBorderColor = selectedColor
         )
     )
 }

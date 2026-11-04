@@ -51,17 +51,27 @@ class UserDashboardViewModel : ViewModel() {
     val uiState: StateFlow<UserDashboardUiState> = _uiState.asStateFlow()
 
     init {
-        cargarDatos()
+        try {
+            cargarDatos()
+        } catch (e: Exception) {
+            Log.e("UserDashboardVM", "Error en init del ViewModel", e)
+            _uiState.update { it.copy(errorMessage = "Error al inicializar el dashboard") }
+        }
     }
 
     fun cargarDatos() {
-        val perfil = SupabaseClient.perfil
-        if (perfil != null) {
-            _uiState.update { it.copy(userName = perfil.nombre) }
-        }
+        try {
+            val perfil = SupabaseClient.perfil
+            if (perfil != null) {
+                _uiState.update { it.copy(userName = perfil.nombre) }
+            }
 
-        cargarMetricas()
-        cargarTicketsRecientes()
+            cargarMetricas()
+            cargarTicketsRecientes()
+        } catch (e: Exception) {
+            Log.e("UserDashboardVM", "Error al cargar datos iniciales", e)
+            _uiState.update { it.copy(errorMessage = "Error al cargar datos iniciales") }
+        }
     }
 
     fun onFilterSelected(filter: String?) {

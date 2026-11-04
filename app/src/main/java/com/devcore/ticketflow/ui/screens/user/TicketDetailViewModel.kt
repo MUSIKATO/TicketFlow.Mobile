@@ -59,6 +59,7 @@ class TicketDetailViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                val esAdmin = SupabaseClient.perfil?.rol?.lowercase() == "admin"
                 val ticket = withContext(Dispatchers.IO) {
                     val json = kotlinx.serialization.json.Json {
                         ignoreUnknownKeys = true
@@ -68,7 +69,9 @@ class TicketDetailViewModel : ViewModel() {
                         SupabaseClient.client.postgrest.from("tickets").select {
                             filter {
                                 eq("id", ticketId)
-                                eq("profile", userId)
+                                if (!esAdmin) {
+                                    eq("profile", userId)
+                                }
                             }
                             limit(1)
                         }.data

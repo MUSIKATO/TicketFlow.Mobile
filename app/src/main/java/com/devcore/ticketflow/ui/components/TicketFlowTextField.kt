@@ -30,6 +30,8 @@ fun TicketFlowTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
+    minLines: Int = 1,
     enabled: Boolean = true
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -48,6 +50,8 @@ fun TicketFlowTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
             enabled = enabled,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(

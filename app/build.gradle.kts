@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -10,6 +12,13 @@ android {
         version = release(37)
     }
 
+    // Leer credenciales de local.properties
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { localProperties.load(it) }
+    }
+
     defaultConfig {
         applicationId = "com.devcore.ticketflow"
         minSdk = 26
@@ -18,6 +27,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Definir BuildConfig fields para credenciales de Supabase
+        buildConfigField("String", "SUPABASE_URL", "\"${localProperties["supabase.url"]}\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"${localProperties["supabase.key"]}\"")
     }
 
     buildTypes {
@@ -33,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

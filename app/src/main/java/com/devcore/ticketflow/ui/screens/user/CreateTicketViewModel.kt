@@ -126,7 +126,7 @@ class CreateTicketViewModel : ViewModel() {
                     withContext(Dispatchers.IO) {
                         val path = "evidencia/${System.currentTimeMillis()}.jpg"
                         val bucket = SupabaseClient.client.storage.from("foto_ticket")
-                        bucket.upload(path, file) { upsert = true }
+                        bucket.upload(path, file)
                         bucket.publicUrl(path).toString()
                     }
                 }

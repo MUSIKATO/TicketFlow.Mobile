@@ -42,7 +42,12 @@ class UserTicketsViewModel : ViewModel() {
     val uiState: StateFlow<UserTicketsUiState> = _uiState.asStateFlow()
 
     init {
-        cargarTickets()
+        try {
+            cargarTickets()
+        } catch (e: Exception) {
+            Log.e("UserTicketsVM", "Error en init del ViewModel", e)
+            _uiState.update { it.copy(errorMessage = "Error al inicializar la lista de tickets") }
+        }
     }
 
     fun onFilterSelected(filter: String?) {

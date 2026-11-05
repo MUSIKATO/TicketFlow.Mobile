@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/userCreateCoordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_screen">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/userCreateScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="88dp"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/screen_horizontal_padding"
+            android:paddingTop="8dp"
+            android:paddingBottom="@dimen/content_bottom_padding">
+
+            <!-- Top bar: regresar + titulo -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnBack"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/ticket_ver_detalle"
+                    android:src="@drawable/ic_arrow_back"
+                    android:tint="@color/primary_navy" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/title_crear_ticket"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Equipo afectado (dropdown) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutEquipo"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/label_equipo"
+                app:endIconMode="dropdown_menu">
+
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/dropdownEquipo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:text="@string/hint_equipo" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutEquipoOtro"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/label_equipo_otro"
+                android:visibility="gone">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputEquipoOtro"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Tipo de incidencia -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/label_tipo_incidencia">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputTipoIncidencia"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/hint_tipo_incidencia"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Descripcion del problema -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/label_descripcion">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/inputDescripcion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:hint="@string/hint_descripcion"
+                    android:inputType="textMultiLine"
+                    android:minLines="4" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Prioridad -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/label_prioridad"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupPrioridad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <!-- Fila 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPrioridadBaja"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/ticket_priority_baja"
+                        app:checkedIconEnabled="false"
+                        app:chipBackgroundColor="@color/priority_chip_bg"
+                        app:chipCornerRadius="10dp"
+                        app:chipStrokeColor="@color/priority_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        android:textColor="@color/priority_chip_text" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPrioridadMedia"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/ticket_priority_media"
+                        app:checkedIconEnabled="false"
+                        app:chipBackgroundColor="@color/priority_chip_bg"
+                        app:chipCornerRadius="10dp"
+                        app:chipStrokeColor="@color/priority_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        android:textColor="@color/priority_chip_text" />
+                </LinearLayout>
+
+                <!-- Fila 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPrioridadAlta"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/ticket_priority_alta"
+                        app:checkedIconEnabled="false"
+                        app:chipBackgroundColor="@color/priority_chip_bg"
+                        app:chipCornerRadius="10dp"
+                        app:chipStrokeColor="@color/priority_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        android:textColor="@color/priority_chip_text" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPrioridadCritica"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:layout_weight="1"
+                        android:checkable="true"
+                        android:text="@string/ticket_priority_critica"
+                        app:checkedIconEnabled="false"
+                        app:chipBackgroundColor="@color/priority_chip_bg"
+                        app:chipCornerRadius="10dp"
+                        app:chipStrokeColor="@color/priority_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        android:textColor="@color/priority_chip_text" />
+                </LinearLayout>
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Evidencia -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/label_evidencia"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnTomarFoto"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_tomar_foto"
+                    android:textColor="@color/primary_navy"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_camera"
+                    app:iconTint="@color/primary_navy"
+                    app:strokeColor="@color/primary_navy"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGaleria"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:text="@string/btn_galeria"
+                    android:textColor="@color/primary_navy"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_photo_library"
+                    app:iconTint="@color/primary_navy"
+                    app:strokeColor="@color/primary_navy"
+                    app:strokeWidth="1dp" />
+            </LinearLayout>
+
+            <!-- Vista previa de evidencia (mock) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:cardBackgroundColor="@color/info_blue_bg"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp">
+
+                        <ImageView
+                            android:id="@+id/imgVistaPrevia"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/txt_vista_previa"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/ic_ticket"
+                            android:tint="@color/info_blue" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <ImageButton
+                        android:id="@+id/btnRemoveEvidence"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/bg_status_dot"
+                        android:backgroundTint="@color/primary_navy"
+                        android:contentDescription="@string/btn_eliminar_evidencia"
+                        android:padding="4dp"
+                        android:src="@drawable/ic_close"
+                        android:tint="@color/white" />
+                </FrameLayout>
+
+                <ImageButton
+                    android:id="@+id/btnAddEvidence"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_status_dot"
+                    android:backgroundTint="@color/white"
+                    android:contentDescription="@string/btn_anadir_evidencia"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_add"
+                    android:tint="@color/primary_navy" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Boton enviar fijo abajo -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSendTicket"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="@dimen/screen_horizontal_padding"
+        android:text="@string/btn_enviar_ticket"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/primary_navy"
+        app:cornerRadius="14dp"
+        app:icon="@drawable/ic_send"
+        app:iconGravity="textStart"
+        app:iconTint="@color/white" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

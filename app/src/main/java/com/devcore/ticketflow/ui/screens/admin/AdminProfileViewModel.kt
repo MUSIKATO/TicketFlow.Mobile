@@ -133,23 +133,13 @@ class AdminProfileViewModel : ViewModel() {
             return
         }
 
-        if (correoTrimmed.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "El correo electrónico es obligatorio") }
-            return
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(correoTrimmed).matches()) {
-            _uiState.update { it.copy(errorMessage = "El formato del correo electrónico no es válido") }
-            return
-        }
-
         _uiState.update { it.copy(isSaving = true, errorMessage = null) }
 
         viewModelScope.launch {
             try {
                 val payload = buildJsonObject {
+                    // El correo es la credencial de Supabase Auth: no se modifica desde el perfil
                     put("nombre", JsonPrimitive(nombreTrimmed))
-                    put("correo", JsonPrimitive(correoTrimmed))
                 }
 
                 withContext(Dispatchers.IO) {
@@ -158,10 +148,7 @@ class AdminProfileViewModel : ViewModel() {
                 }
 
                 // Actualizar en memoria
-                SupabaseClient.perfil = SupabaseClient.perfil?.copy(
-                    nombre = nombreTrimmed,
-                    correo = correoTrimmed
-                )
+                SupabaseClient.perfil = SupabaseClient.perfil?.copy(nombre = nombreTrimmed)
 
                 originalNombre = nombreTrimmed
                 originalCorreo = correoTrimmed

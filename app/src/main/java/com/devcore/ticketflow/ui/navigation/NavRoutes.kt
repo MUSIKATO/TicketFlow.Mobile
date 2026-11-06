@@ -29,6 +29,5 @@ object NavRoutes {
 
     // Integrante 5: Perfil, reportes, pruebas y documentación
     const val USER_PROFILE = "user_profile"
-    const val USER_EDIT_PROFILE = "user_edit_profile"
     const val ADMIN_REPORTS = "admin_reports"
 }

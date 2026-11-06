@@ -402,11 +402,6 @@ fun AppNavigation(
             }
         }
 
-        composable(NavRoutes.USER_EDIT_PROFILE) {
-            // No se necesita, la edición está integrada en UserProfileScreen
-            navController.popBackStack()
-        }
-
         composable(NavRoutes.ADMIN_PROFILE) {
             androidx.compose.material3.Scaffold(
                 bottomBar = {

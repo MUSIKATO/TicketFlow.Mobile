@@ -10,7 +10,9 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Count
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +53,8 @@ class UserDashboardViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UserDashboardUiState())
     val uiState: StateFlow<UserDashboardUiState> = _uiState.asStateFlow()
 
+    private var ticketsJob: Job? = null
+
     init {
         try {
             cargarDatos()
@@ -88,9 +92,10 @@ class UserDashboardViewModel : ViewModel() {
 
     fun refrescar() {
         _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+        ticketsJob?.cancel()
         viewModelScope.launch {
-            cargarMetricas()
-            cargarTicketsRecientes()
+            cargarMetricasInternal()
+            cargarTicketsRecientesInternal()
             _uiState.update { it.copy(isRefreshing = false) }
         }
     }
@@ -104,11 +109,15 @@ class UserDashboardViewModel : ViewModel() {
     }
 
     private fun cargarMetricas() {
-        viewModelScope.launch {
+        viewModelScope.launch { cargarMetricasInternal() }
+    }
+
+    private suspend fun cargarMetricasInternal() {
+        run {
             val userId = obtenerUserId()
             if (userId == null) {
                 Log.e("UserDashboardVM", "Perfil o usuario nulo, no se pudieron cargar métricas")
-                return@launch
+                return@run
             }
 
             _uiState.update { it.copy(isMetricsLoading = true) }
@@ -145,6 +154,8 @@ class UserDashboardViewModel : ViewModel() {
                         isMetricsLoading = false
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("UserDashboardVM", "Fallo al cargar métricas", e)
                 _uiState.update {
@@ -171,11 +182,16 @@ class UserDashboardViewModel : ViewModel() {
     }
 
     private fun cargarTicketsRecientes() {
-        viewModelScope.launch {
+        ticketsJob?.cancel()
+        ticketsJob = viewModelScope.launch { cargarTicketsRecientesInternal() }
+    }
+
+    private suspend fun cargarTicketsRecientesInternal() {
+        run {
             val userId = obtenerUserId()
             if (userId == null) {
                 Log.e("UserDashboardVM", "Usuario nulo, no se pudieron cargar tickets recientes")
-                return@launch
+                return@run
             }
 
             _uiState.update { it.copy(isTicketsLoading = true) }
@@ -200,6 +216,8 @@ class UserDashboardViewModel : ViewModel() {
                         isTicketsLoading = false
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e("UserDashboardVM", "Fallo al cargar tickets recientes", e)
                 _uiState.update {

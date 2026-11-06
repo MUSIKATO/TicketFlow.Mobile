@@ -146,7 +146,7 @@ fun AdminHistoryScreen(
             when {
                 state.isLoading && state.tickets.isEmpty() -> {
                     TicketFlowLoading(
-                        message = "Cargando registros desde PostgreSQL...",
+                        message = "Cargando historial...",
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -193,6 +193,14 @@ fun AdminHistoryScreen(
                                         Text("Reintentar")
                                     }
                                 }
+                                if (state.searchQuery.isNotBlank() && state.tickets.isNotEmpty() && !state.endReached) {
+                                    androidx.compose.material3.TextButton(
+                                        onClick = viewModel::cargarMas,
+                                        enabled = !state.isLoadingMore
+                                    ) {
+                                        Text("Buscar en más registros")
+                                    }
+                                }
                             }
                         }
                     }
@@ -211,7 +219,11 @@ fun AdminHistoryScreen(
                     ) {
                         item {
                             Text(
-                                text = "${filteredTickets.size} registros · ordenados del más reciente al más antiguo",
+                                text = if (state.searchQuery.isBlank()) {
+                                    "${filteredTickets.size} registros · del más reciente al más antiguo"
+                                } else {
+                                    "${filteredTickets.size} coincidencias entre los registros cargados"
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 modifier = Modifier.padding(bottom = 2.dp)
@@ -228,6 +240,26 @@ fun AdminHistoryScreen(
                                 fecha = formatTicketDate(ticket.createdAt),
                                 onClick = { onNavigateToDetail(ticket.id) }
                             )
+                        }
+                        if (!state.endReached) {
+                            item(key = "cargar_mas") {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (state.isLoadingMore) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.padding(8.dp),
+                                            strokeWidth = 2.dp,
+                                            color = PrimaryNavy
+                                        )
+                                    } else {
+                                        androidx.compose.material3.TextButton(onClick = viewModel::cargarMas) {
+                                            Text("Cargar más registros")
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

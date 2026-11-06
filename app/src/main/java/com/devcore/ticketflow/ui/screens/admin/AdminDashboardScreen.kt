@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
@@ -305,7 +306,7 @@ fun AdminDashboardScreen(
             AdminModuleActionCard(
                 title = "Historial de registros",
                 description = "Consulta cronológica de tickets registrados",
-                icon = Icons.Default.Schedule,
+                icon = Icons.Default.History,
                 onClick = onNavigateToHistory
             )
 

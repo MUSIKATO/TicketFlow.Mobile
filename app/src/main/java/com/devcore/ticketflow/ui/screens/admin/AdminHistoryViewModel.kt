@@ -21,10 +21,16 @@ data class AdminHistoryUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val endReached: Boolean = false,
     val errorMessage: String? = null
 )
 
 class AdminHistoryViewModel : ViewModel() {
+
+    companion object {
+        private const val PAGE_SIZE = 50L
+    }
 
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
     private val _uiState = MutableStateFlow(AdminHistoryUiState())
@@ -55,15 +61,52 @@ class AdminHistoryViewModel : ViewModel() {
         }
     }
 
+    /** Carga la siguiente página de registros y la agrega al final de la lista. */
+    fun cargarMas() {
+        val state = _uiState.value
+        if (state.isLoading || state.isRefreshing || state.isLoadingMore || state.endReached) return
+        _uiState.update { it.copy(isLoadingMore = true, errorMessage = null) }
+        viewModelScope.launch {
+            try {
+                val pagina = consultarPagina(offset = state.tickets.size.toLong())
+                _uiState.update {
+                    it.copy(
+                        tickets = it.tickets + pagina,
+                        endReached = pagina.size < PAGE_SIZE,
+                        isLoadingMore = false
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("AdminHistoryViewModel", "Error al cargar más registros", e)
+                _uiState.update {
+                    it.copy(
+                        isLoadingMore = false,
+                        errorMessage = "No se pudieron cargar más registros. Verifica la conexión."
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun consultarPagina(offset: Long): List<AdminTicketItem> =
+        withContext(Dispatchers.IO) {
+            val data = SupabaseClient.client.postgrest.from("tickets").select {
+                order(column = "created_at", order = Order.DESCENDING)
+                range(offset, offset + PAGE_SIZE - 1)
+            }.data
+            json.decodeFromString<List<AdminTicketItem>>(data)
+        }
+
     private suspend fun cargarHistorialInternal() {
         try {
-            val tickets = withContext(Dispatchers.IO) {
-                val data = SupabaseClient.client.postgrest.from("tickets").select {
-                    order(column = "created_at", order = Order.DESCENDING)
-                }.data
-                json.decodeFromString<List<AdminTicketItem>>(data)
+            val tickets = consultarPagina(offset = 0)
+            _uiState.update {
+                it.copy(
+                    tickets = tickets,
+                    endReached = tickets.size < PAGE_SIZE,
+                    errorMessage = null
+                )
             }
-            _uiState.update { it.copy(tickets = tickets, errorMessage = null) }
         } catch (e: Exception) {
             Log.e("AdminHistoryViewModel", "Error al cargar historial de tickets desde PostgreSQL", e)
             _uiState.update {

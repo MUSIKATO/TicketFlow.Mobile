@@ -44,6 +44,7 @@ El objetivo de TicketFlow Mobile es proporcionar una solución integral para la 
 - **Gestión de equipos**: Administración del catálogo de equipos y hardware.
 - **Reportes**: Generación y visualización de reportes avanzados.
 - **Gestión de perfil**: Edición del perfil de administrador.
+- **Historial de registros**: Consulta cronológica y búsqueda de tickets obtenidos desde PostgreSQL.
 
 ## Integración de Deep Links
 

@@ -1,10 +1,8 @@
 ﻿package com.devcore.ticketflow
 
 import android.util.Log
-import com.devcore.ticketflow.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
@@ -13,13 +11,10 @@ object SupabaseClient {
 
     val client = try {
         createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
+            supabaseUrl = "https://rsqayszvxrcgvylquzog.supabase.co",
+            supabaseKey = "sb_publishable_cCCulG6WfHEr-BRaG36bBQ_3rTbTL3Z"
         ) {
-            install(Auth) {
-                scheme = "ticketflow" // Deep link scheme para OAuth callbacks
-                host = "auth"         // Deep link host: ticketflow://auth
-            }
+            install(Auth)
             install(Postgrest)
             install(Storage)
             install(Realtime)

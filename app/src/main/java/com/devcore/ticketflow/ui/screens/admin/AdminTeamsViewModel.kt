@@ -8,6 +8,7 @@ import com.devcore.ticketflow.R
 import com.devcore.ticketflow.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,9 +70,7 @@ class AdminTeamsViewModel : ViewModel() {
             // 2. Consultar equipos que realmente tienen incidencias en Supabase
             val ticketsData = withContext(Dispatchers.IO) {
                 SupabaseClient.client.postgrest.from("tickets")
-                    .select {
-                        // Traer columna equipo y estado para estadísticas por hardware
-                    }.data
+                    .select(columns = Columns.list("equipo", "estado")).data
             }
 
             val ticketsJson = Json.parseToJsonElement(ticketsData).jsonArray
@@ -97,7 +96,8 @@ class AdminTeamsViewModel : ViewModel() {
             val lista = mutableListOf<AdminEquipoItem>()
 
             opcionesCatalogo.forEach { nombre ->
-                val stats = conteoPorEquipo[nombre] ?: Pair(0, 0)
+                val stats = conteoPorEquipo.entries
+                    .firstOrNull { it.key.equals(nombre, ignoreCase = true) }?.value ?: Pair(0, 0)
                 lista.add(
                     AdminEquipoItem(
                         nombre = nombre,

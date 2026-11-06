@@ -105,7 +105,6 @@ fun AdminTicketsScreen(
 
     var ticketParaCambiarEstado by remember { mutableStateOf<AdminTicketItem?>(null) }
     var ticketParaCambiarPrioridad by remember { mutableStateOf<AdminTicketItem?>(null) }
-    var ticketParaEliminar by remember { mutableStateOf<AdminTicketItem?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -432,29 +431,6 @@ fun AdminTicketsScreen(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { ticketParaCambiarPrioridad = null }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    if (ticketParaEliminar != null) {
-        AlertDialog(
-            onDismissRequest = { ticketParaEliminar = null },
-            title = { Text("Eliminar ticket #${ticketParaEliminar!!.id}") },
-            text = { Text("¿Estás seguro de que deseas eliminar este ticket? Esta acción no se puede deshacer.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.eliminarTicket(ticketParaEliminar!!.id)
-                        ticketParaEliminar = null
-                    }
-                ) {
-                    Text("Eliminar", color = PriorityCritical)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { ticketParaEliminar = null }) {
                     Text("Cancelar")
                 }
             }

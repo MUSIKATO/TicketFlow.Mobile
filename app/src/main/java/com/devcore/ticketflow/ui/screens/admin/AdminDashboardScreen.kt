@@ -73,6 +73,7 @@ fun AdminDashboardScreen(
     onNavigateToUsers: () -> Unit,
     onNavigateToTeams: () -> Unit,
     onNavigateToReports: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AdminDashboardViewModel = viewModel()
@@ -102,7 +103,7 @@ fun AdminDashboardScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Hola, Administrador",
+                                text = "Hola, ${state.adminName}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
@@ -299,6 +300,13 @@ fun AdminDashboardScreen(
                 description = "Estadísticas y análisis de incidencias",
                 icon = Icons.Default.ConfirmationNumber,
                 onClick = onNavigateToReports
+            )
+
+            AdminModuleActionCard(
+                title = "Historial de registros",
+                description = "Consulta cronológica de tickets registrados",
+                icon = Icons.Default.Schedule,
+                onClick = onNavigateToHistory
             )
 
             Spacer(modifier = Modifier.height(16.dp))

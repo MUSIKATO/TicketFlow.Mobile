@@ -16,6 +16,7 @@ import com.devcore.ticketflow.SupabaseClient
 import com.devcore.ticketflow.ui.components.AdminBottomNavigation
 import com.devcore.ticketflow.ui.components.UserBottomNavigation
 import com.devcore.ticketflow.ui.screens.admin.AdminDashboardScreen
+import com.devcore.ticketflow.ui.screens.admin.AdminHistoryScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminProfileScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminReportsScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminTeamsScreen
@@ -145,7 +146,7 @@ fun AppNavigation(
                 onNavigateBack = { navController.popBackStack() },
                 onTicketCreated = { ticketId ->
                     navController.navigate(NavRoutes.ticketDetail(ticketId)) {
-                        popUpTo(NavRoutes.USER_TICKETS) { inclusive = false }
+                        popUpTo(NavRoutes.CREATE_TICKET) { inclusive = true }
                     }
                 }
             )
@@ -247,6 +248,9 @@ fun AppNavigation(
                         },
                         onNavigateToReports = {
                             navController.navigate(NavRoutes.ADMIN_REPORTS)
+                        },
+                        onNavigateToHistory = {
+                            navController.navigate(NavRoutes.ADMIN_HISTORY)
                         },
                         onSignOut = { performSignOut() }
                     )
@@ -441,6 +445,15 @@ fun AppNavigation(
         composable(NavRoutes.ADMIN_REPORTS) {
             AdminReportsScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(NavRoutes.ADMIN_HISTORY) {
+            AdminHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { ticketId ->
+                    navController.navigate(NavRoutes.ticketDetail(ticketId))
+                }
             )
         }
     }

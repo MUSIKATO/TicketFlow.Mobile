@@ -128,7 +128,7 @@ fun UserDashboardScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "¿Qué problema necesitas reportar?",
+                        text = if (state.userRole == "admin") "Revisa y gestiona los tickets pendientes" else "¿Qué problema necesitas reportar hoy?",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary
                     )

@@ -32,6 +32,7 @@ data class DashboardTicket(
 
 data class UserDashboardUiState(
     val userName: String = "Usuario",
+    val userRole: String = "usuario",
     val pendingCount: Int = 0,
     val inProcessCount: Int = 0,
     val resolvedCount: Int = 0,
@@ -63,7 +64,12 @@ class UserDashboardViewModel : ViewModel() {
         try {
             val perfil = SupabaseClient.perfil
             if (perfil != null) {
-                _uiState.update { it.copy(userName = perfil.nombre) }
+                _uiState.update { 
+                    it.copy(
+                        userName = perfil.nombre,
+                        userRole = perfil.rol.lowercase()
+                    ) 
+                }
             }
 
             cargarMetricas()

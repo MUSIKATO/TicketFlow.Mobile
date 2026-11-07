@@ -1,7 +1,6 @@
-package com.devcore.ticketflow
+﻿package com.devcore.ticketflow
 
 import android.util.Log
-import com.devcore.ticketflow.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.postgrest.Postgrest
@@ -15,7 +14,10 @@ object SupabaseClient {
             supabaseUrl = BuildConfig.SUPABASE_URL,
             supabaseKey = BuildConfig.SUPABASE_KEY
         ) {
-            install(Auth)
+            install(Auth) {
+                scheme = "ticketflow"
+                host = "auth"
+            }
             install(Postgrest)
             install(Storage)
             install(Realtime)

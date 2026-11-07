@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.devcore.ticketflow.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Count
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/** Fila mínima de `tickets` para las estadísticas por equipo y tipo de incidencia. */
+@Serializable
+data class ReporteTicketRow(
+    val equipo: String? = null,
+    @SerialName("tipo_incidencia")
+    val tipoIncidencia: String? = null
+)
 
 data class AdminReportsUiState(
     val totalTickets: Int = 0,
@@ -121,13 +132,15 @@ class AdminReportsViewModel : ViewModel() {
                     }
                 val high = highResult.countOrNull()?.toInt() ?: 0
 
+                // Una sola consulta con solo las columnas necesarias (equipo y tipo de incidencia)
+                val filas = SupabaseClient.client.postgrest.from("tickets")
+                    .select(columns = Columns.list("equipo", "tipo_incidencia"))
+                    .decodeList<ReporteTicketRow>()
+
                 // Equipo con más incidencias y lista ordenada
-                val equipmentResult = SupabaseClient.client.postgrest.from("tickets")
-                    .select {
-                        "equipo"
-                    }
-                val equipmentTickets = equipmentResult.decodeList<MutableMap<String, String>>()
-                val equipmentCounts = equipmentTickets.groupingBy { it["equipo"] ?: "Desconocido" }.eachCount()
+                val equipmentCounts = filas
+                    .groupingBy { it.equipo?.trim().takeUnless { n -> n.isNullOrEmpty() } ?: "Desconocido" }
+                    .eachCount()
                 val topEquipment = equipmentCounts.maxByOrNull { it.value }
                 val topEquipmentName = topEquipment?.key
                 val topEquipmentCount = topEquipment?.value ?: 0
@@ -136,12 +149,9 @@ class AdminReportsViewModel : ViewModel() {
                     .map { it.key to it.value }
 
                 // Estadísticas por tipo de incidencia
-                val incidentTypeResult = SupabaseClient.client.postgrest.from("tickets")
-                    .select {
-                        "tipo_incidencia"
-                    }
-                val incidentTickets = incidentTypeResult.decodeList<MutableMap<String, String>>()
-                val incidentTypeStats = incidentTickets.groupingBy { it["tipo_incidencia"] ?: "Sin clasificar" }.eachCount()
+                val incidentTypeStats = filas
+                    .groupingBy { it.tipoIncidencia?.trim().takeUnless { t -> t.isNullOrEmpty() } ?: "Sin clasificar" }
+                    .eachCount()
 
                 _uiState.update {
                     it.copy(

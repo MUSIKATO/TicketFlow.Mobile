@@ -86,6 +86,12 @@ class CreateTicketViewModel : ViewModel() {
         _uiState.update { it.copy(errorMessage = null) }
     }
 
+    fun onPermisoCamaraDenegado() {
+        _uiState.update {
+            it.copy(errorMessage = "Se necesita el permiso de cámara para adjuntar una fotografía. Puedes activarlo en los ajustes del teléfono.")
+        }
+    }
+
     fun dismissSuccess() {
         _uiState.update { it.copy(successMessage = null) }
     }

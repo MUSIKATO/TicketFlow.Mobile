@@ -181,23 +181,13 @@ class UserProfileViewModel : ViewModel() {
             return
         }
 
-        if (correoTrimmed.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "El correo electrónico es obligatorio") }
-            return
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(correoTrimmed).matches()) {
-            _uiState.update { it.copy(errorMessage = "El formato del correo electrónico no es válido") }
-            return
-        }
-
         _uiState.update { it.copy(isSaving = true, errorMessage = null) }
 
         viewModelScope.launch {
             try {
                 val payload = buildJsonObject {
+                    // El correo es la credencial de Supabase Auth: no se modifica desde el perfil
                     put("nombre", JsonPrimitive(nombreTrimmed))
-                    put("correo", JsonPrimitive(correoTrimmed))
                 }
 
                 withContext(Dispatchers.IO) {
@@ -206,10 +196,7 @@ class UserProfileViewModel : ViewModel() {
                 }
 
                 // Actualizar en memoria
-                SupabaseClient.perfil = SupabaseClient.perfil?.copy(
-                    nombre = nombreTrimmed,
-                    correo = correoTrimmed
-                )
+                SupabaseClient.perfil = SupabaseClient.perfil?.copy(nombre = nombreTrimmed)
 
                 originalNombre = nombreTrimmed
                 originalCorreo = correoTrimmed
@@ -237,12 +224,16 @@ class UserProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 SupabaseClient.client.auth.signOut()
-                SupabaseClient.perfil = null
-                _events.emit(UserProfileEvent.SignOut)
             } catch (e: Exception) {
-                Log.e("UserProfileVM", "Fallo al cerrar sesión", e)
-                _uiState.update {
-                    it.copy(errorMessage = "No se pudo cerrar sesión")
+                Log.e("UserProfileVM", "Error al cerrar sesión en Supabase Auth", e)
+                // Continuar incluso si hay error - limpiar estado local y navegar
+            } finally {
+                // Siempre limpiar estado local y emitir evento, incluso si signOut falla
+                SupabaseClient.perfil = null
+                try {
+                    _events.emit(UserProfileEvent.SignOut)
+                } catch (e: Exception) {
+                    Log.e("UserProfileVM", "Error al emitir evento de SignOut", e)
                 }
             }
         }

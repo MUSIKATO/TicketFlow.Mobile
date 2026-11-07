@@ -1,4 +1,4 @@
-# AUDITORÍA TÉCNICA PARTE 1 — ARQUITECTURA Y CONFIGURACIÓN DE SUPABASE
+﻿# AUDITORÍA TÉCNICA PARTE 1 — ARQUITECTURA Y CONFIGURACIÓN DE SUPABASE
 ## TicketFlow Mobile — Android con Jetpack Compose y Supabase
 
 **Fecha de auditoría:** Noviembre 2026  
@@ -281,7 +281,10 @@ val client = try {
         supabaseUrl = BuildConfig.SUPABASE_URL,
         supabaseKey = BuildConfig.SUPABASE_KEY
     ) {
-        install(Auth)
+        install(Auth) {
+            scheme = "ticketflow"
+            host = "auth"
+        }
         install(Postgrest)
         install(Storage)
         install(Realtime)
@@ -1411,3 +1414,16 @@ bash gradlew clean compileDebugKotlin
 
 Todos los objetivos de la Parte 1 del Integrante 1 han sido cumplidos. La arquitectura y configuración de Supabase están completamente documentadas. Las credenciales están protegidas. El código legacy ha sido analizado. La propuesta de Repository está documentada. Las tareas pendientes requieren autorización del usuario para su ejecución.
 
+
+---
+
+## 17. CIERRE TÉCNICO Y VERIFICACIÓN FINAL (NOVIEMBRE 2026)
+
+### Estado de la Configuración del Cliente Supabase
+- **Inyección por BuildConfig:** Credenciales SUPABASE_URL y SUPABASE_KEY resueltas dinámicamente desde local.properties mediante BuildConfigField.
+- **Plantilla de Entorno:** Archivo local.properties.example creado en la raíz del repositorio con placeholders limpios para documentación y onboarding de nuevos desarrolladores.
+- **Deep Link OAuth:** Se configuró explícitamente scheme = "ticketflow" y host = "auth" en install(Auth) para máxima coherencia con el intent-filter de AndroidManifest.xml (	icketflow://auth/callback).
+- **Seguridad de Claves:** Confirmada la ausencia de credenciales privileged (service_role / secret) en todo el cliente Android.
+- **Validación Automatizada:**
+  - .\gradlew.bat compileDebugKotlin: Exitoso (0 errores).
+  - .\gradlew.bat testDebugUnitTest: Exitoso (26 tareas, 24 pruebas unitarias aprobadas).

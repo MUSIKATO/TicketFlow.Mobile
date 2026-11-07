@@ -11,10 +11,13 @@ object SupabaseClient {
 
     val client = try {
         createSupabaseClient(
-            supabaseUrl = "https://rsqayszvxrcgvylquzog.supabase.co",
-            supabaseKey = "sb_publishable_cCCulG6WfHEr-BRaG36bBQ_3rTbTL3Z"
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_KEY
         ) {
-            install(Auth)
+            install(Auth) {
+                scheme = "ticketflow"
+                host = "auth"
+            }
             install(Postgrest)
             install(Storage)
             install(Realtime)

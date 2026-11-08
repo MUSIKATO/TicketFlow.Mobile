@@ -45,7 +45,8 @@ class LoginViewModel : ViewModel() {
     private val _events = MutableSharedFlow<LoginEvent>()
     val events: SharedFlow<LoginEvent> = _events.asSharedFlow()
 
-    // Proteccin contra mltiples emisiones o navegaciones concurrentes
+    // Proteccin contra mltiples emisiones concurrentes
+    @Volatile
     private var isNavigating = false
 
     init {
@@ -138,7 +139,7 @@ class LoginViewModel : ViewModel() {
                 obtenerPerfilYRedirigir()
 
             } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e // Re-throw CancellationException to maintain proper cancellation
+                throw e
             } catch (e: Exception) {
                 Log.e("TicketFlowAuth", "Fallo al iniciar sesin: ${e.message}")
                 val userFriendlyMessage = when {
@@ -175,25 +176,21 @@ class LoginViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Iniciar autenticacin con Google OAuth usando Supabase Auth SDK 3.5.0
-                // Se especifica explcitamente el redirectUrl acordado
+                Log.d("TicketFlowAuth", "Iniciando flujo Google OAuth con redirectUrl ticketflow://auth/callback")
                 SupabaseClient.client.auth.signInWith(
                     provider = Google,
                     redirectUrl = "ticketflow://auth/callback"
                 )
-
-                // El navegador del sistema / Custom Tabs se abrir para completar la autenticacin con Google
-                // Al completarse, retornar mediante ticketflow://auth/callback hacia MainActivity
-                // observarEstadoDeSesion() detectar SessionStatus.Authenticated y redirigir al dashboard
             } catch (e: kotlinx.coroutines.CancellationException) {
                 _uiState.update { it.copy(isGoogleLoading = false) }
-                throw e // Re-throw CancellationException para mantener cancelacin correcta
+                throw e
             } catch (e: Exception) {
-                Log.e("TicketFlowAuth", "Fallo al iniciar sesin con Google: ${e.message}")
+                Log.e("TicketFlowAuth", "Fallo al invocar signInWith(Google): ${e.message}")
                 val userFriendlyMessage = when {
                     e.message?.contains("provider is not enabled", ignoreCase = true) == true ||
-                    e.message?.contains("provider disabled", ignoreCase = true) == true ->
-                        "El inicio de sesin con Google no est configurado en Supabase. Contacte al administrador."
+                    e.message?.contains("provider disabled", ignoreCase = true) == true ||
+                    e.message?.contains("missing OAuth secret", ignoreCase = true) == true ->
+                        "El proveedor Google no est configurado o falta el Client Secret en Supabase. Contacte al administrador."
                     e.message?.contains("network", ignoreCase = true) == true ||
                     e.message?.contains("timeout", ignoreCase = true) == true ||
                     e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
@@ -218,16 +215,16 @@ class LoginViewModel : ViewModel() {
     private fun observarEstadoDeSesion() {
         viewModelScope.launch {
             SupabaseClient.client.auth.sessionStatus.collect { status ->
+                Log.d("TicketFlowAuth", "sessionStatus recibido en LoginViewModel: $status (isNavigating=$isNavigating)")
                 when (status) {
                     is SessionStatus.Authenticated -> {
-                        Log.d("TicketFlowAuth", "Sesin autenticada detectada (source: ${status.source})")
-                        // Si estbamos esperando respuesta de login y no hay una navegacin en curso:
-                        if (!isNavigating && (_uiState.value.isGoogleLoading || _uiState.value.isLoading || _uiState.value.isCheckingSession)) {
+                        val uid = status.session.user?.id?.take(8) ?: "N/A"
+                        Log.d("TicketFlowAuth", "Sesin Authenticated detectada. UID parcial: $uid, source: ${status.source}")
+                        if (!isNavigating) {
                             obtenerPerfilYRedirigir()
                         }
                     }
                     is SessionStatus.NotAuthenticated -> {
-                        // Restablecer flag si el usuario cerr sesin para permitir un prximo login normal
                         isNavigating = false
                         if (!_uiState.value.isCheckingSession) {
                             _uiState.update { it.copy(isGoogleLoading = false, isLoading = false) }
@@ -246,6 +243,7 @@ class LoginViewModel : ViewModel() {
         val usuario = SupabaseClient.client.auth.currentUserOrNull()
         if (usuario == null) {
             isNavigating = false
+            Log.e("TicketFlowAuth", "obtenerPerfilYRedirigir: currentUserOrNull() retorn null")
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -257,8 +255,10 @@ class LoginViewModel : ViewModel() {
             return
         }
 
+        val uidParcial = usuario.id.take(8)
+        Log.d("TicketFlowAuth", "Iniciando consulta a tabla profiles para UID parcial: $uidParcial, email: ${usuario.email}")
+
         try {
-            // Intentar consultar el perfil. Si fue creado por trigger, podra tardar unos milisegundos en el primer login
             var perfil: Profile? = null
             var intentos = 0
             val maxIntentos = 3
@@ -273,11 +273,12 @@ class LoginViewModel : ViewModel() {
                             }
                         }
                         .decodeSingle<Profile>()
+                    Log.d("TicketFlowAuth", "Perfil obtenido exitosamente en intento ${intentos + 1}: ${perfil.nombre}, Rol: ${perfil.rol}")
                 } catch (e: Exception) {
                     intentos++
+                    Log.w("TicketFlowAuth", "Intento $intentos de $maxIntentos fall al consultar profiles: ${e.message}")
                     if (intentos < maxIntentos) {
-                        Log.d("TicketFlowAuth", "Perfil no encontrado en intento $intentos, esperando trigger...")
-                        delay(500)
+                        delay(600)
                     } else {
                         throw e
                     }
@@ -285,22 +286,48 @@ class LoginViewModel : ViewModel() {
             }
 
             if (perfil == null) {
-                throw IllegalStateException("El perfil del usuario no fue encontrado.")
+                throw IllegalStateException("El perfil del usuario no fue encontrado tras $maxIntentos intentos.")
+            }
+
+            // Validación defensiva: el UID del perfil debe coincidir con el usuario autenticado
+            if (perfil.id != usuario.id) {
+                Log.e("TicketFlowAuth", "SEGURIDAD: Mismatch entre UID de auth (${usuario.id}) e UID de perfil (${perfil.id})")
+                throw SecurityException("El UID del perfil no coincide con el usuario autenticado")
             }
 
             SupabaseClient.perfil = perfil
 
-            val rol = perfil.rol.lowercase()
-            if (rol == "admin" || rol == "usuario") {
+            // Validación defensiva: rol no puede ser null ni vacío
+            val rolRaw = perfil.rol?.trim() ?: ""
+            if (rolRaw.isEmpty()) {
+                Log.w("TicketFlowAuth", "Rol vacío o null detectado para usuario ${usuario.id}. Cerrando sesión preventiva.")
+                isNavigating = false
+                SupabaseClient.client.auth.signOut()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         isGoogleLoading = false,
-                        isCheckingSession = false
+                        isCheckingSession = false,
+                        generalError = "El rol del usuario no está configurado correctamente. Contacte al administrador."
+                    )
+                }
+                return
+            }
+
+            val rol = rolRaw.lowercase()
+            if (rol == "admin" || rol == "usuario") {
+                Log.d("TicketFlowAuth", "Redirigiendo usuario al dashboard para rol: $rol")
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isGoogleLoading = false,
+                        isCheckingSession = false,
+                        generalError = null
                     )
                 }
                 _events.emit(LoginEvent.NavigateToDashboard(rol))
             } else {
+                Log.w("TicketFlowAuth", "Rol no reconocido: $rol. Cerrando sesión preventiva.")
                 isNavigating = false
                 SupabaseClient.client.auth.signOut()
                 _uiState.update {
@@ -313,19 +340,17 @@ class LoginViewModel : ViewModel() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("TicketFlowAuth", "Fallo al obtener el perfil de usuario", e)
+            Log.e("TicketFlowAuth", "Error al consultar perfil del usuario: ${e.message}", e)
             isNavigating = false
-            
-            // Cerrar sesin limpia para no dejar al usuario en un estado incoherente
-            try {
-                SupabaseClient.client.auth.signOut()
-            } catch (_: Exception) {}
 
+            // NO cerrar sesin inmediatamente si hubo error de perfil en Google para permitir diagnstico claro
+            // y que el usuario vea el mensaje exacto en pantalla
             val errorMsg = if (e.message?.contains("No elements", ignoreCase = true) == true ||
-                e.message?.contains("IllegalStateException", ignoreCase = true) == true) {
-                "Tu cuenta de Google fue autenticada, pero an no tiene un perfil registrado en TicketFlow. Contacte al administrador del sistema."
+                e.message?.contains("IllegalStateException", ignoreCase = true) == true ||
+                e.message?.contains("PGRST116", ignoreCase = true) == true) {
+                "Tu cuenta de Google () fue autenticada, pero no tiene una fila en la tabla 'profiles'. Contacte al administrador para registrar su rol."
             } else {
-                "Error al consultar el perfil del usuario. Contacte a soporte tcnico."
+                "Error al consultar el perfil del usuario (). Verifique su conexin o contacte a soporte."
             }
 
             _uiState.update {
@@ -342,11 +367,15 @@ class LoginViewModel : ViewModel() {
     private fun comprobarSesion() {
         viewModelScope.launch {
             try {
+                Log.d("TicketFlowAuth", "comprobarSesion: Esperando inicializacin de Supabase Auth...")
                 SupabaseClient.client.auth.awaitInitialization()
                 val usuario = SupabaseClient.client.auth.currentUserOrNull()
                 if (usuario != null) {
+                    val uidParcial = usuario.id.take(8)
+                    Log.d("TicketFlowAuth", "Sesin activa detectada en comprobarSesion para UID parcial: $uidParcial")
                     obtenerPerfilYRedirigir()
                 } else {
+                    Log.d("TicketFlowAuth", "No hay sesin activa persistida.")
                     _uiState.update { it.copy(isCheckingSession = false) }
                 }
             } catch (e: Exception) {

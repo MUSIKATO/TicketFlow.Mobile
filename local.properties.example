@@ -1,0 +1,11 @@
+﻿## Archivo de ejemplo para configuración local de Android SDK y Supabase
+# Copia este archivo con el nombre 'local.properties' en la raíz del proyecto.
+# local.properties está excluido de Git para proteger credenciales privadas.
+
+# Ruta local al Android SDK en tu equipo:
+sdk.dir=C\:\\Users\\tu_usuario\\AppData\\Local\\Android\\Sdk
+
+# Credenciales de Supabase (valores de ejemplo/placeholders):
+# Obtén tu Project URL y Anon/Publishable Key desde Supabase Dashboard -> Settings -> API
+supabase.url=https://tu-proyecto.supabase.co
+supabase.key=tu_supabase_anon_publishable_key_aqui

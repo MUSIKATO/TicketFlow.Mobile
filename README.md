@@ -224,7 +224,12 @@ Todos los datos se mantienen en memoria durante la ejecución de la consola. Las
 
 ## Integrantes
 
-*Sección para completar con los nombres y responsabilidades de los integrantes del equipo.*
+Jonathan Alexander Alberto Cruz (AC200739)
+Vladimir Josué Aguila Méndez (AM240357)
+Bryan Otoniel Loarca Montenegro (LM252002)
+Fernando Alexander Juarez Coto (JC252637)
+Ricardo Ernesto Alfaro Recinos (AR180405)
+
 
 ## Estado del Proyecto
 

@@ -148,18 +148,7 @@ TicketFlow/
 - **Cambiar prioridad**: Modificación de nivel de prioridad (BAJA → MEDIA → ALTA → CRITICA)
 - **Consultar detalle**: Visualización completa de información del ticket
 
-## Estados y Prioridades
 
-### Estados
-- **PENDIENTE**: Ticket creado pero no atendido
-- **EN_PROCESO**: Ticket siendo trabajado por el equipo de soporte
-- **SOLUCIONADO**: Ticket resuelto y cerrado
-
-### Prioridades
-- **BAJA**: Incidencia menor, no afecta operaciones críticas
-- **MEDIA**: Incidencia moderada, requiere atención pero no urgente
-- **ALTA**: Incidencia importante, afecta operaciones significativas
-- **CRITICA**: Incidencia crítica, requiere atención inmediata
 
 ## Validaciones
 

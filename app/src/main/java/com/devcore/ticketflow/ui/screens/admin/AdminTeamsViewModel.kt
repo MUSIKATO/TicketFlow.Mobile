@@ -42,6 +42,7 @@ class AdminTeamsViewModel : ViewModel() {
     val uiState: StateFlow<AdminTeamsUiState> = _uiState.asStateFlow()
 
     fun cargarEquipos(context: Context) {
+        if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             cargarEquiposInternal(context)
@@ -50,6 +51,7 @@ class AdminTeamsViewModel : ViewModel() {
     }
 
     fun refrescar(context: Context) {
+        if (_uiState.value.isRefreshing || _uiState.value.isLoading) return
         _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
         viewModelScope.launch {
             cargarEquiposInternal(context)

@@ -103,6 +103,20 @@ fun AdminTicketsScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    val editingTicket = state.editingTicket
+    if (editingTicket != null) {
+        AdminEditTicketScreen(
+            ticket = editingTicket,
+            onCancel = viewModel::cancelarEdicion,
+            onSave = viewModel::guardarEdicion,
+            isSaving = state.updatingTicketId == editingTicket.id,
+            errorMessage = state.errorMessage,
+            onDismissError = viewModel::dismissMessages,
+            modifier = modifier
+        )
+        return
+    }
+
     var ticketParaCambiarEstado by remember { mutableStateOf<AdminTicketItem?>(null) }
     var ticketParaCambiarPrioridad by remember { mutableStateOf<AdminTicketItem?>(null) }
 
@@ -432,19 +446,6 @@ fun AdminTicketsScreen(
             dismissButton = {
                 TextButton(onClick = { ticketParaCambiarPrioridad = null }) {
                     Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    if (state.editingTicket != null) {
-        AlertDialog(
-            onDismissRequest = viewModel::cancelarEdicion,
-            title = { Text("Editar Ticket #${state.editingTicket!!.id}") },
-            text = { Text("Para editar campos completos, usa los badges de prioridad y estado en la tarjeta para cambios rápidos.") },
-            confirmButton = {
-                TextButton(onClick = viewModel::cancelarEdicion) {
-                    Text("Entendido")
                 }
             }
         )

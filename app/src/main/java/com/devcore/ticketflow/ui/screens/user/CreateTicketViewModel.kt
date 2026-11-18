@@ -43,6 +43,8 @@ sealed interface CreateTicketEvent {
 
 class CreateTicketViewModel : ViewModel() {
 
+    private val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
+
     private val _uiState = MutableStateFlow(CreateTicketUiState())
     val uiState: StateFlow<CreateTicketUiState> = _uiState.asStateFlow()
 
@@ -102,6 +104,8 @@ class CreateTicketViewModel : ViewModel() {
 
     fun crearTicket() {
         val state = _uiState.value
+        if (state.isLoading) return // Prevención de envíos duplicados
+
         val userId = obtenerUserId()
 
         if (userId == null) {
@@ -124,16 +128,26 @@ class CreateTicketViewModel : ViewModel() {
             return
         }
 
+        if (state.descripcion.trim().length < 5) {
+            _uiState.update { it.copy(errorMessage = "La descripción debe tener al menos 5 caracteres") }
+            return
+        }
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
             try {
                 val evidenciaUrl = state.fotoFile?.let { file ->
                     withContext(Dispatchers.IO) {
-                        val path = "evidencia/${System.currentTimeMillis()}.jpg"
-                        val bucket = SupabaseClient.client.storage.from("foto_ticket")
-                        bucket.upload(path, file)
-                        bucket.publicUrl(path).toString()
+                        try {
+                            val path = "evidencia/${System.currentTimeMillis()}.jpg"
+                            val bucket = SupabaseClient.client.storage.from("foto_ticket")
+                            bucket.upload(path, file)
+                            bucket.publicUrl(path).toString()
+                        } catch (e: Exception) {
+                            Log.e("CreateTicketVM", "Fallo al subir evidencia a Storage, continuando sin foto", e)
+                            null
+                        }
                     }
                 }
 
@@ -153,7 +167,7 @@ class CreateTicketViewModel : ViewModel() {
                         .insert(JsonArray(listOf(payload))) { select() }
                 }
 
-                val nuevoId = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
+                val nuevoId = json
                     .parseToJsonElement(result.data).jsonArray
                     .firstOrNull()?.let { it as kotlinx.serialization.json.JsonObject }
                     ?.get("id")?.let { it as kotlinx.serialization.json.JsonPrimitive }
@@ -174,10 +188,15 @@ class CreateTicketViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("CreateTicketVM", "Fallo al crear el ticket", e)
+                val mensajeError = when {
+                    e is java.net.UnknownHostException -> "Sin conexión a internet. Verifica tu red."
+                    e.message?.contains("permission", ignoreCase = true) == true -> "Error de permisos al registrar el ticket."
+                    else -> "No se pudo crear el ticket. Inténtalo de nuevo."
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "No se pudo crear el ticket. Inténtalo de nuevo."
+                        errorMessage = mensajeError
                     )
                 }
             }

@@ -131,11 +131,20 @@ fun AdminReportsScreen(
             }
 
             state.errorMessage?.let { error ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     TicketFlowErrorBanner(
                         message = error,
                         onDismiss = viewModel::dismissError
                     )
+                    androidx.compose.material3.TextButton(
+                        onClick = viewModel::cargarDatos,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Reintentar consulta")
+                    }
                 }
             }
 

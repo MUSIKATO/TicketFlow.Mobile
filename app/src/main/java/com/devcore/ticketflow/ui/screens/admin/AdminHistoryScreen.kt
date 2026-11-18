@@ -1,14 +1,20 @@
 package com.devcore.ticketflow.ui.screens.admin
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
@@ -18,11 +24,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -31,14 +40,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.devcore.ticketflow.ui.components.TicketCard
 import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.components.TicketFlowLoading
 import com.devcore.ticketflow.ui.components.TicketFlowTextField
 import com.devcore.ticketflow.ui.components.formatTicketDate
+import com.devcore.ticketflow.ui.theme.CardStroke
 import com.devcore.ticketflow.ui.theme.PrimaryNavy
 import com.devcore.ticketflow.ui.theme.TextPrimary
 import com.devcore.ticketflow.ui.theme.TextSecondary
@@ -52,17 +64,23 @@ fun AdminHistoryScreen(
     viewModel: AdminHistoryViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    val filteredTickets = remember(state.tickets, state.searchQuery) {
-        val query = state.searchQuery.trim()
-        if (query.isBlank()) {
-            state.tickets
-        } else {
-            state.tickets.filter { ticket ->
-                ticket.id.toString().contains(query, ignoreCase = true) ||
-                    ticket.equipo.contains(query, ignoreCase = true) ||
-                    ticket.tipoIncidencia.contains(query, ignoreCase = true) ||
-                    ticket.descripcion.contains(query, ignoreCase = true)
-            }
+
+    val filteredTickets = remember(state.tickets, state.searchQuery, state.selectedStatusFilter) {
+        val query = state.searchQuery.trim().lowercase()
+        val statusFilter = state.selectedStatusFilter
+
+        state.tickets.filter { ticket ->
+            val matchesQuery = query.isBlank() ||
+                    ticket.id.toString().contains(query) ||
+                    ticket.equipo.lowercase().contains(query) ||
+                    ticket.tipoIncidencia.lowercase().contains(query) ||
+                    ticket.descripcion.lowercase().contains(query) ||
+                    ticket.estado.lowercase().contains(query) ||
+                    ticket.prioridad.lowercase().contains(query)
+
+            val matchesStatus = statusFilter == null || ticket.estado.equals(statusFilter, ignoreCase = true)
+
+            matchesQuery && matchesStatus
         }
     }
 
@@ -118,11 +136,12 @@ fun AdminHistoryScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // Buscador por texto libre
             TicketFlowTextField(
                 value = state.searchQuery,
                 onValueChange = viewModel::onSearchQueryChanged,
                 label = "Buscar en el historial",
-                placeholder = "ID, equipo, tipo o descripción...",
+                placeholder = "ID, equipo, tipo, descripción, estado...",
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -135,6 +154,52 @@ fun AdminHistoryScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
+            // Filtros rápidos por estado
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val statusFilters = listOf(
+                    "Todos" to null,
+                    "Pendientes" to "Pendiente",
+                    "En proceso" to "En proceso",
+                    "Solucionados" to "Solucionado"
+                )
+
+                statusFilters.forEach { (label, value) ->
+                    val isSelected = state.selectedStatusFilter == value
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { viewModel.onStatusFilterSelected(value) },
+                        label = { Text(label, fontSize = 12.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = PrimaryNavy,
+                            selectedLabelColor = Color.White,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            labelColor = TextSecondary
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = isSelected,
+                            borderColor = if (isSelected) PrimaryNavy else CardStroke
+                        )
+                    )
+                }
+
+                if (state.selectedStatusFilter != null || state.searchQuery.isNotBlank()) {
+                    TextButton(
+                        onClick = viewModel::restablecerFiltros,
+                        contentPadding = PaddingValues(horizontal = 8.dp)
+                    ) {
+                        Text("Limpiar filtros", fontSize = 12.sp)
+                    }
+                }
+            }
+
             state.errorMessage?.let { message ->
                 TicketFlowErrorBanner(
                     message = message,
@@ -146,7 +211,7 @@ fun AdminHistoryScreen(
             when {
                 state.isLoading && state.tickets.isEmpty() -> {
                     TicketFlowLoading(
-                        message = "Cargando historial...",
+                        message = "Cargando historial de tickets...",
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -162,6 +227,9 @@ fun AdminHistoryScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = androidx.compose.ui.graphics.SolidColor(CardStroke)
                             )
                         ) {
                             Column(
@@ -174,31 +242,39 @@ fun AdminHistoryScreen(
                                 Icon(
                                     imageVector = Icons.Default.History,
                                     contentDescription = null,
-                                    tint = TextSecondary
+                                    tint = TextSecondary.copy(alpha = 0.5f),
+                                    modifier = Modifier.padding(bottom = 4.dp)
                                 )
                                 Text(
                                     text = if (state.errorMessage != null && state.tickets.isEmpty()) {
-                                        "No fue posible confirmar los registros almacenados."
+                                        "No fue posible consultar los registros almacenados."
                                     } else if (state.tickets.isEmpty()) {
-                                        "Aún no hay tickets registrados."
+                                        "Aún no hay tickets registrados en el sistema."
                                     } else {
-                                        "No hay registros que coincidan con la búsqueda."
+                                        "No hay registros que coincidan con los criterios de búsqueda."
                                     },
-                                    color = TextSecondary
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
+
                                 if (state.errorMessage != null && state.tickets.isEmpty()) {
-                                    androidx.compose.material3.TextButton(
-                                        onClick = viewModel::refrescar
-                                    ) {
-                                        Text("Reintentar")
+                                    TextButton(onClick = viewModel::refrescar) {
+                                        Text("Reintentar conexión")
                                     }
                                 }
+
+                                if (state.selectedStatusFilter != null || state.searchQuery.isNotBlank()) {
+                                    TextButton(onClick = viewModel::restablecerFiltros) {
+                                        Text("Restablecer criterios")
+                                    }
+                                }
+
                                 if (state.searchQuery.isNotBlank() && state.tickets.isNotEmpty() && !state.endReached) {
-                                    androidx.compose.material3.TextButton(
+                                    TextButton(
                                         onClick = viewModel::cargarMas,
                                         enabled = !state.isLoadingMore
                                     ) {
-                                        Text("Buscar en más registros")
+                                        Text("Buscar en más páginas del historial")
                                     }
                                 }
                             }
@@ -219,16 +295,17 @@ fun AdminHistoryScreen(
                     ) {
                         item {
                             Text(
-                                text = if (state.searchQuery.isBlank()) {
-                                    "${filteredTickets.size} registros · del más reciente al más antiguo"
+                                text = if (state.searchQuery.isBlank() && state.selectedStatusFilter == null) {
+                                    "${filteredTickets.size} registros cargados · orden cronológico descendente"
                                 } else {
-                                    "${filteredTickets.size} coincidencias entre los registros cargados"
+                                    "${filteredTickets.size} coincidencias encontradas"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 modifier = Modifier.padding(bottom = 2.dp)
                             )
                         }
+
                         items(filteredTickets, key = { it.id }) { ticket ->
                             TicketCard(
                                 id = ticket.id,
@@ -241,10 +318,13 @@ fun AdminHistoryScreen(
                                 onClick = { onNavigateToDetail(ticket.id) }
                             )
                         }
+
                         if (!state.endReached) {
                             item(key = "cargar_mas") {
                                 Box(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     if (state.isLoadingMore) {
@@ -254,8 +334,8 @@ fun AdminHistoryScreen(
                                             color = PrimaryNavy
                                         )
                                     } else {
-                                        androidx.compose.material3.TextButton(onClick = viewModel::cargarMas) {
-                                            Text("Cargar más registros")
+                                        TextButton(onClick = viewModel::cargarMas) {
+                                            Text("Cargar más registros antiguos")
                                         }
                                     }
                                 }

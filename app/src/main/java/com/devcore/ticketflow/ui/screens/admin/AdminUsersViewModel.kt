@@ -49,6 +49,7 @@ class AdminUsersViewModel : ViewModel() {
     }
 
     fun refrescar() {
+        if (_uiState.value.isRefreshing || _uiState.value.isLoading) return
         _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
         viewModelScope.launch {
             cargarUsuariosInternal()
@@ -57,6 +58,7 @@ class AdminUsersViewModel : ViewModel() {
     }
 
     fun cargarUsuarios() {
+        if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             cargarUsuariosInternal()

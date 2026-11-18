@@ -19,6 +19,7 @@ import kotlinx.serialization.json.Json
 data class AdminHistoryUiState(
     val tickets: List<AdminTicketItem> = emptyList(),
     val searchQuery: String = "",
+    val selectedStatusFilter: String? = null, // null = Todos, "Pendiente", "En proceso", "Solucionado"
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -42,6 +43,14 @@ class AdminHistoryViewModel : ViewModel() {
 
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun onStatusFilterSelected(status: String?) {
+        _uiState.update { it.copy(selectedStatusFilter = status) }
+    }
+
+    fun restablecerFiltros() {
+        _uiState.update { it.copy(selectedStatusFilter = null, searchQuery = "") }
     }
 
     fun refrescar() {

@@ -249,7 +249,7 @@ fun LoginScreen(
                             viewModel.iniciarSesion()
                         },
                         isLoading = state.isLoading,
-                        enabled = !state.isLoading && !state.isGoogleLoading
+                        enabled = !state.isLoading && !state.isGoogleLoading && !state.isFacebookLoading
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -296,7 +296,7 @@ fun LoginScreen(
                             focusManager.clearFocus()
                             viewModel.iniciarSesionConGoogle()
                         },
-                        enabled = !state.isLoading && !state.isGoogleLoading
+                        enabled = !state.isLoading && !state.isGoogleLoading && !state.isFacebookLoading
                     ) {
                         Row(
                             modifier = Modifier
@@ -322,6 +322,55 @@ fun LoginScreen(
                                 )
                                 Text(
                                     text = "Continuar con Google",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Botón de Facebook
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline
+                        ),
+                        onClick = {
+                            focusManager.clearFocus()
+                            viewModel.iniciarSesionConFacebook()
+                        },
+                        enabled = !state.isLoading && !state.isGoogleLoading && !state.isFacebookLoading
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (state.isFacebookLoading) {
+                                androidx.compose.material3.CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Text(
+                                    text = "f",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = "Continuar con Facebook",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )

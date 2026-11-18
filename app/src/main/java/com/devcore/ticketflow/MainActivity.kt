@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         try {
             enableEdgeToEdge()
 
-            // Procesar deep link si se abre la app desde el callback de Google
+            // Procesar deep link si se abre la app desde el callback OAuth
             intent?.let { handleAuthIntent(it, fromOnCreate = true) }
 
             setContent {

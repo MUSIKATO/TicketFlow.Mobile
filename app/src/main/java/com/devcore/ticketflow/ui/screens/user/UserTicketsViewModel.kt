@@ -8,7 +8,9 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,13 +43,11 @@ class UserTicketsViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(UserTicketsUiState())
     val uiState: StateFlow<UserTicketsUiState> = _uiState.asStateFlow()
 
+    // Solo una carga activa a la vez: si cambia el filtro o se refresca, la anterior se cancela
+    private var loadJob: Job? = null
+
     init {
-        try {
-            cargarTickets()
-        } catch (e: Exception) {
-            Log.e("UserTicketsVM", "Error en init del ViewModel", e)
-            _uiState.update { it.copy(errorMessage = "Error al inicializar la lista de tickets") }
-        }
+        cargarTickets()
     }
 
     fun onFilterSelected(filter: String?) {
@@ -57,9 +57,10 @@ class UserTicketsViewModel : ViewModel() {
     }
 
     fun refrescar() {
-        _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
-        viewModelScope.launch {
-            cargarTickets()
+        loadJob?.cancel()
+        _uiState.update { it.copy(isRefreshing = true, isLoading = false, errorMessage = null) }
+        loadJob = viewModelScope.launch {
+            cargarTicketsInternal()
             _uiState.update { it.copy(isRefreshing = false) }
         }
     }
@@ -73,49 +74,42 @@ class UserTicketsViewModel : ViewModel() {
     }
 
     private fun cargarTickets() {
-        viewModelScope.launch {
-            val userId = obtenerUserId()
-            if (userId == null) {
-                Log.e("UserTicketsVM", "Usuario nulo, no se pudieron cargar tickets")
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "No se pudo identificar el usuario"
-                    )
-                }
-                return@launch
-            }
+        loadJob?.cancel()
+        _uiState.update { it.copy(isLoading = true, isRefreshing = false, errorMessage = null) }
+        loadJob = viewModelScope.launch {
+            cargarTicketsInternal()
+            _uiState.update { it.copy(isLoading = false) }
+        }
+    }
 
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                val filtro = _uiState.value.selectedFilter
-                val tickets = withContext(Dispatchers.IO) {
-                    val query = SupabaseClient.client.postgrest.from("tickets").select {
-                        filter {
-                            eq("profile", userId)
-                            if (filtro != null) eq("estado", filtro)
-                        }
-                        order("created_at", Order.DESCENDING)
+    /** Consulta los tickets del usuario y actualiza el estado. Espera al resultado (suspend). */
+    private suspend fun cargarTicketsInternal() {
+        val userId = obtenerUserId()
+        if (userId == null) {
+            Log.e("UserTicketsVM", "Usuario nulo, no se pudieron cargar tickets")
+            _uiState.update { it.copy(errorMessage = "No se pudo identificar el usuario") }
+            return
+        }
+
+        try {
+            val filtro = _uiState.value.selectedFilter
+            val tickets = withContext(Dispatchers.IO) {
+                val query = SupabaseClient.client.postgrest.from("tickets").select {
+                    filter {
+                        eq("profile", userId)
+                        if (filtro != null) eq("estado", filtro)
                     }
-                    kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
-                        .decodeFromString<List<TicketItem>>(query.data)
+                    order("created_at", Order.DESCENDING)
                 }
-
-                _uiState.update {
-                    it.copy(
-                        tickets = tickets,
-                        isLoading = false
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("UserTicketsVM", "Fallo al cargar tickets", e)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "No se pudieron cargar los tickets"
-                    )
-                }
+                kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
+                    .decodeFromString<List<TicketItem>>(query.data)
             }
+            _uiState.update { it.copy(tickets = tickets, errorMessage = null) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("UserTicketsVM", "Fallo al cargar tickets", e)
+            _uiState.update { it.copy(errorMessage = "No se pudieron cargar los tickets. Verifica tu conexión.") }
         }
     }
 }

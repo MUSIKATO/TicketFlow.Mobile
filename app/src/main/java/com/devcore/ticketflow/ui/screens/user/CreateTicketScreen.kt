@@ -54,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,14 +100,16 @@ fun CreateTicketScreen(
     }
 
     var expanded by remember { mutableStateOf(false) }
-    var photoFile by remember { mutableStateOf<File?>(null) }
+    // rememberSaveable: la ruta de la foto sobrevive a rotaciones o a que el sistema recree la Activity
+    var photoPath by rememberSaveable { mutableStateOf<String?>(null) }
 
     // Launcher para tomar foto
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success && photoFile != null) {
-            viewModel.onFotoSeleccionada(photoFile)
+        val path = photoPath
+        if (success && path != null) {
+            viewModel.onFotoSeleccionada(File(path))
         }
     }
 
@@ -117,7 +120,7 @@ fun CreateTicketScreen(
         if (isGranted) {
             // Crear archivo temporal
             val newPhotoFile = File(context.cacheDir, "foto_ticket_${System.currentTimeMillis()}.jpg")
-            photoFile = newPhotoFile
+            photoPath = newPhotoFile.absolutePath
             val photoUri = androidx.core.content.FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
@@ -125,7 +128,7 @@ fun CreateTicketScreen(
             )
             cameraLauncher.launch(photoUri)
         } else {
-            // Permiso denegado - mostrar mensaje (opcional, por ahora no hacemos nada)
+            viewModel.onPermisoCamaraDenegado()
         }
     }
 
@@ -175,7 +178,7 @@ fun CreateTicketScreen(
         ) {
             // Error banner
             state.errorMessage?.let { error ->
-                TicketFlowErrorBanner(message = error)
+                TicketFlowErrorBanner(message = error, onDismiss = viewModel::dismissError)
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
@@ -197,7 +200,7 @@ fun CreateTicketScreen(
                     value = state.equipo,
                     onValueChange = { viewModel.onEquipoChange(it) },
                     label = { Text("Seleccione un equipo") },
-                    readOnly = false,
+                    readOnly = true,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .menuAnchor()
@@ -384,7 +387,7 @@ fun CreateTicketScreen(
                             } else {
                                 // Android < 6 no requiere permiso de cámara explícito
                                 val newPhotoFile = File(context.cacheDir, "foto_ticket_${System.currentTimeMillis()}.jpg")
-                                photoFile = newPhotoFile
+                                photoPath = newPhotoFile.absolutePath
                                 val photoUri = androidx.core.content.FileProvider.getUriForFile(
                                     context,
                                     "${context.packageName}.fileprovider",

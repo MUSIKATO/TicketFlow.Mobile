@@ -252,10 +252,25 @@ fun AdminUsersScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "No existen perfiles registrados que coincidan con la búsqueda.",
+                                    text = if (state.searchQuery.isNotBlank() || state.selectedRoleFilter != null) {
+                                        "No existen perfiles registrados que coincidan con los filtros aplicados."
+                                    } else {
+                                        "No hay usuarios registrados en el sistema."
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondary
                                 )
+                                if (state.searchQuery.isNotBlank() || state.selectedRoleFilter != null) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    androidx.compose.material3.TextButton(
+                                        onClick = {
+                                            viewModel.onSearchQueryChanged("")
+                                            viewModel.onRoleFilterSelected(null)
+                                        }
+                                    ) {
+                                        Text("Limpiar filtros")
+                                    }
+                                }
                             }
                         }
                     }
@@ -267,6 +282,18 @@ fun AdminUsersScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        item {
+                            Text(
+                                text = if (state.searchQuery.isBlank() && state.selectedRoleFilter == null) {
+                                    "${filteredUsers.size} usuarios registrados"
+                                } else {
+                                    "${filteredUsers.size} coincidencias encontradas"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
                         items(filteredUsers, key = { it.id }) { user ->
                             AdminUserCard(user = user)
                         }

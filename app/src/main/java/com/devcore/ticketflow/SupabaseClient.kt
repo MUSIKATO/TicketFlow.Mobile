@@ -1,10 +1,8 @@
 ﻿package com.devcore.ticketflow
 
 import android.util.Log
-import com.devcore.ticketflow.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
@@ -17,8 +15,8 @@ object SupabaseClient {
             supabaseKey = BuildConfig.SUPABASE_KEY
         ) {
             install(Auth) {
-                scheme = "ticketflow" // Deep link scheme para OAuth callbacks
-                host = "auth"         // Deep link host: ticketflow://auth
+                scheme = "ticketflow"
+                host = "auth"
             }
             install(Postgrest)
             install(Storage)

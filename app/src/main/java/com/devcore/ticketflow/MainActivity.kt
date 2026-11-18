@@ -8,11 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.devcore.ticketflow.ui.navigation.AppNavigation
 import com.devcore.ticketflow.ui.theme.TicketFlowTheme
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
 
-    // Registro en memoria del ltimo Intent procesado para evitar reprocesamiento
     private var lastHandledIntentData: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,10 +21,8 @@ class MainActivity : ComponentActivity() {
         try {
             enableEdgeToEdge()
 
-            // Procesar deep link en arranque en fro solo si no es una recreacin de estado
-            if (savedInstanceState == null) {
-                intent?.let { handleAuthIntent(it) }
-            }
+            // Procesar deep link si se abre la app desde el callback de Google
+            intent?.let { handleAuthIntent(it, fromOnCreate = true) }
 
             setContent {
                 TicketFlowTheme {
@@ -32,7 +30,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error al inicializar la aplicacin", e)
+            Log.e("MainActivity", "Error al inicializar la aplicación", e)
             finish()
         }
     }
@@ -40,34 +38,39 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleAuthIntent(intent)
+        handleAuthIntent(intent, fromOnCreate = false)
     }
 
-    private fun handleAuthIntent(intent: Intent) {
-        val uri = intent.data ?: return
+    private fun handleAuthIntent(intent: Intent, fromOnCreate: Boolean) {
+        val uri = intent.data
+        Log.d("TicketFlowAuth", "MainActivity.handleAuthIntent (fromOnCreate=) -> URI: ${uri?.scheme}://")
+        if (uri == null) return
+
         if (uri.scheme == "ticketflow" && uri.host == "auth") {
             val uriString = uri.toString()
             if (uriString == lastHandledIntentData) {
-                Log.d("MainActivity", "Deep link ya procesado previamente, omitiendo duplicado.")
+                Log.d("TicketFlowAuth", "Deep link ya procesado previamente, omitiendo duplicado.")
                 return
             }
             lastHandledIntentData = uriString
-            Log.d("MainActivity", "Procesando deep link de autenticacin de forma segura")
+            Log.d("TicketFlowAuth", "Procesando deep link OAuth con Supabase SDK...")
             try {
                 SupabaseClient.client.handleDeeplinks(
                     intent = intent,
                     onSessionSuccess = { userSession ->
-                        Log.d("MainActivity", "Sesin OAuth obtenida exitosamente")
+                        val email = userSession.user?.email ?: "desconocido"
+                        val uid = userSession.user?.id?.take(8) ?: "N/A"
+                        Log.d("TicketFlowAuth", "Sesión OAuth importada con éxito en MainActivity. Usuario: $email, UID parcial: $uid")
                     },
                     onError = { error ->
-                        Log.e("MainActivity", "Error procesando deep link OAuth", error)
+                        Log.e("TicketFlowAuth", "Error en handleDeeplinks al procesar callback", error)
                     }
                 )
             } catch (e: Exception) {
-                Log.e("MainActivity", "Excepcin al procesar handleDeeplinks", e)
+                Log.e("TicketFlowAuth", "Excepción al invocar handleDeeplinks", e)
             }
         } else {
-            Log.d("MainActivity", "Intent recibido sin deep link de auth relevante")
+            Log.d("TicketFlowAuth", "Intent no coincide con scheme=ticketflow y host=auth: $uri")
         }
     }
 }

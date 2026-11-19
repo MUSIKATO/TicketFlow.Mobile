@@ -11,8 +11,8 @@ object SupabaseClient {
 
     val client = try {
         createSupabaseClient(
-            supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
+                       supabaseUrl = "https://rsqayszvxrcgvylquzog.supabase.co",
+            supabaseKey = "sb_publishable_cCCulG6WfHEr-BRaG36bBQ_3rTbTL3Z"
         ) {
             install(Auth) {
                 scheme = "ticketflow"

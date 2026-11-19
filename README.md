@@ -4,7 +4,7 @@
 
 TicketFlow Mobile es una aplicación Android nativa para la gestión de incidencias y tickets de soporte técnico en el contexto de Perfumería VIP. Permite a los usuarios reportar problemas de equipos y servicios adjuntando evidencia fotográfica, realizar seguimiento del estado de sus tickets y administrar su perfil, mientras que los administradores gestionan, priorizan y resuelven incidencias desde un panel con métricas, historial y reportes.
 
-La aplicación utiliza **Supabase** como backend: autenticación (correo/contraseña y Google OAuth), base de datos PostgreSQL a través de PostgREST y almacenamiento de archivos en Supabase Storage.
+La aplicación utiliza **Supabase** como backend: autenticación (correo/contraseña, Google OAuth y Facebook OAuth), base de datos PostgreSQL a través de PostgREST y almacenamiento de archivos en Supabase Storage.
 
 ## Objetivo del Sistema
 
@@ -15,7 +15,7 @@ TicketFlow Mobile busca proporcionar una solución integral para la gestión de 
 - Gestión administrativa de incidencias: cambio de estado, prioridad, edición y eliminación
 - Visualización de métricas del sistema, historial de registros y reportes
 - Clasificación de tickets por prioridades y estados
-- Autenticación segura con Supabase Auth (email/password y Google OAuth)
+- Autenticación segura con Supabase Auth (email/password, Google OAuth y Facebook OAuth)
 
 ## Tecnologías Utilizadas
 
@@ -76,6 +76,7 @@ El proyecto también conserva Activities con layouts XML de etapas anteriores de
 
 - **Registro e inicio de sesión** con correo y contraseña mediante Supabase Auth, con validaciones de campos y mensajes de error descriptivos.
 - **Inicio de sesión con Google (OAuth)** mediante el proveedor `Google` del SDK de Supabase.
+- **Inicio de sesión con Facebook (OAuth)** mediante el proveedor `Facebook` del SDK de Supabase.
 - **Deep links de autenticación**: callback `ticketflow://auth/callback` procesado en `MainActivity` mediante `handleDeeplinks` del SDK.
 - **Persistencia de sesión**: restauración automática al reabrir la aplicación.
 - **Navegación por rol**: los usuarios `admin` acceden al panel administrativo y los `usuario` al panel de usuario.
@@ -255,7 +256,7 @@ Los datos de la consola se mantienen en memoria durante la ejecución y no persi
 ## Estado del Proyecto
 
 - **Aplicación Android (Compose)**: Interfaz implementada en Jetpack Compose con arquitectura MVVM. Compila correctamente (`compileDebugKotlin`, `assembleDebug`, `testDebugUnitTest`).
-- **Autenticación Supabase**: Email/password y Google OAuth con deep links.
+- **Autenticación Supabase**: Email/password, Google OAuth y Facebook OAuth con deep links.
 - **Persistencia**: PostgreSQL (PostgREST) para `profiles` y `tickets`; Supabase Storage para evidencias fotográficas.
 - **Módulo Usuario**: Dashboard, Tickets, Creación con evidencia, Detalle y Perfil.
 - **Módulo Administrador**: Dashboard de métricas, Gestión de Tickets, Historial, Usuarios, Equipos, Reportes y Perfil.
@@ -265,5 +266,5 @@ Los datos de la consola se mantienen en memoria durante la ejecución y no persi
 
 - La aplicación Android utiliza **Supabase** para la persistencia real de datos.
 - Las credenciales de Supabase se configuran en `local.properties` (`supabase.url`, `supabase.key`), archivo que no se versiona; consultar `local.properties.example` como plantilla.
-- Las políticas RLS, los triggers y la configuración del proveedor Google OAuth se gestionan desde el panel de Supabase.
+- Las políticas RLS, los triggers y la configuración de los proveedores Google y Facebook OAuth se gestionan desde el panel de Supabase.
 - El proyecto cuenta con documentación técnica adicional en la carpeta `docs/`.

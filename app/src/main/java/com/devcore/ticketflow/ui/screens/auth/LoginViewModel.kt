@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.devcore.ticketflow.Profile
 import com.devcore.ticketflow.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Facebook
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -30,7 +31,8 @@ data class LoginUiState(
     val generalError: String? = null,
     val isLoading: Boolean = false,
     val isCheckingSession: Boolean = true,
-    val isGoogleLoading: Boolean = false
+    val isGoogleLoading: Boolean = false,
+    val isFacebookLoading: Boolean = false
 )
 
 sealed interface LoginEvent {
@@ -212,6 +214,53 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    fun iniciarSesionConFacebook() {
+        _uiState.update {
+            it.copy(
+                isFacebookLoading = true,
+                generalError = null
+            )
+        }
+
+        viewModelScope.launch {
+            try {
+                Log.d("TicketFlowAuth", "Iniciando flujo Facebook OAuth con redirectUrl ticketflow://auth/callback")
+                SupabaseClient.client.auth.signInWith(
+                    provider = Facebook,
+                    redirectUrl = "ticketflow://auth/callback"
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                _uiState.update { it.copy(isFacebookLoading = false) }
+                throw e
+            } catch (e: Exception) {
+                Log.e("TicketFlowAuth", "Fallo al invocar signInWith(Facebook): ${e.message}")
+                val userFriendlyMessage = when {
+                    e.message?.contains("provider is not enabled", ignoreCase = true) == true ||
+                    e.message?.contains("provider disabled", ignoreCase = true) == true ||
+                    e.message?.contains("missing OAuth secret", ignoreCase = true) == true ||
+                    e.message?.contains("missing OAuth client", ignoreCase = true) == true ->
+                        "El proveedor Facebook no está configurado o faltan las credenciales OAuth en Supabase. Contacte al administrador."
+                    e.message?.contains("network", ignoreCase = true) == true ||
+                    e.message?.contains("timeout", ignoreCase = true) == true ||
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ||
+                    e.message?.contains("connection", ignoreCase = true) == true ->
+                        "Error de conexión. Verifica tu conexión a internet"
+                    e.message?.contains("cancelled", ignoreCase = true) == true ||
+                    e.message?.contains("canceled", ignoreCase = true) == true ->
+                        "Autenticación con Facebook cancelada"
+                    else ->
+                        "No se pudo iniciar sesión con Facebook: ${e.message}"
+                }
+                _uiState.update {
+                    it.copy(
+                        isFacebookLoading = false,
+                        generalError = userFriendlyMessage
+                    )
+                }
+            }
+        }
+    }
+
     private fun observarEstadoDeSesion() {
         viewModelScope.launch {
             SupabaseClient.client.auth.sessionStatus.collect { status ->
@@ -227,7 +276,13 @@ class LoginViewModel : ViewModel() {
                     is SessionStatus.NotAuthenticated -> {
                         isNavigating = false
                         if (!_uiState.value.isCheckingSession) {
-                            _uiState.update { it.copy(isGoogleLoading = false, isLoading = false) }
+                            _uiState.update {
+                                it.copy(
+                                    isGoogleLoading = false,
+                                    isFacebookLoading = false,
+                                    isLoading = false
+                                )
+                            }
                         }
                     }
                     else -> Unit
@@ -248,6 +303,7 @@ class LoginViewModel : ViewModel() {
                 it.copy(
                     isLoading = false,
                     isGoogleLoading = false,
+                    isFacebookLoading = false,
                     isCheckingSession = false,
                     generalError = "No se pudo recuperar la sesin del usuario"
                 )
@@ -307,6 +363,7 @@ class LoginViewModel : ViewModel() {
                     it.copy(
                         isLoading = false,
                         isGoogleLoading = false,
+                        isFacebookLoading = false,
                         isCheckingSession = false,
                         generalError = "El rol del usuario no está configurado correctamente. Contacte al administrador."
                     )
@@ -321,6 +378,7 @@ class LoginViewModel : ViewModel() {
                     it.copy(
                         isLoading = false,
                         isGoogleLoading = false,
+                        isFacebookLoading = false,
                         isCheckingSession = false,
                         generalError = null
                     )
@@ -334,6 +392,7 @@ class LoginViewModel : ViewModel() {
                     it.copy(
                         isLoading = false,
                         isGoogleLoading = false,
+                        isFacebookLoading = false,
                         isCheckingSession = false,
                         generalError = "Rol de usuario '$rol' no reconocido en el sistema"
                     )
@@ -343,20 +402,21 @@ class LoginViewModel : ViewModel() {
             Log.e("TicketFlowAuth", "Error al consultar perfil del usuario: ${e.message}", e)
             isNavigating = false
 
-            // NO cerrar sesin inmediatamente si hubo error de perfil en Google para permitir diagnstico claro
+            // No cerrar la sesión inmediatamente ante un error de perfil para permitir diagnosticar el problema
             // y que el usuario vea el mensaje exacto en pantalla
             val errorMsg = if (e.message?.contains("No elements", ignoreCase = true) == true ||
                 e.message?.contains("IllegalStateException", ignoreCase = true) == true ||
                 e.message?.contains("PGRST116", ignoreCase = true) == true) {
-                "Tu cuenta de Google () fue autenticada, pero no tiene una fila en la tabla 'profiles'. Contacte al administrador para registrar su rol."
+                "Tu cuenta fue autenticada, pero no tiene una fila en la tabla 'profiles'. Contacte al administrador para registrar su rol."
             } else {
-                "Error al consultar el perfil del usuario (). Verifique su conexin o contacte a soporte."
+                "Error al consultar el perfil del usuario. Verifique su conexión o contacte a soporte."
             }
 
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     isGoogleLoading = false,
+                    isFacebookLoading = false,
                     isCheckingSession = false,
                     generalError = errorMsg
                 )

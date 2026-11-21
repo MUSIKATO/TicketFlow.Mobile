@@ -1,5 +1,7 @@
 # TicketFlow Mobile
 
+![Licencia: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)
+
 ## Descripción del Proyecto
 
 TicketFlow Mobile es una aplicación Android nativa para la gestión de incidencias y tickets de soporte técnico en el contexto de Perfumería VIP. Permite a los usuarios reportar problemas de equipos y servicios adjuntando evidencia fotográfica, realizar seguimiento del estado de sus tickets y administrar su perfil, mientras que los administradores gestionan, priorizan y resuelven incidencias desde un panel con métricas, historial y reportes.
@@ -268,3 +270,17 @@ Los datos de la consola se mantienen en memoria durante la ejecución y no persi
 - Las credenciales de Supabase se configuran en `local.properties` (`supabase.url`, `supabase.key`), archivo que no se versiona; consultar `local.properties.example` como plantilla.
 - Las políticas RLS, los triggers y la configuración de los proveedores Google y Facebook OAuth se gestionan desde el panel de Supabase.
 - El proyecto cuenta con documentación técnica adicional en la carpeta `docs/`.
+
+## Licencia
+
+Este proyecto está publicado bajo la licencia **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
+
+### Resumen de derechos
+
+- **Compartir**: puedes copiar y redistribuir el material en cualquier medio o formato.
+- **Adaptar**: puedes remezclar, transformar y construir a partir del material para cualquier propósito, incluso comercialmente.
+- **Atribución**: debes dar el crédito correspondiente al autor original, proporcionar un enlace a la licencia e indicar si se realizaron cambios.
+
+### Texto completo
+
+Consulta el texto completo de la licencia en el archivo [`LICENSE`](LICENSE) o en [creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/).

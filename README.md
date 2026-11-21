@@ -1,6 +1,21 @@
 # TicketFlow Mobile
 
 ![Licencia: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)
+![Android](https://img.shields.io/badge/Android-Native-green)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.x-purple)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-blue)
+![Supabase](https://img.shields.io/badge/Supabase-Backend-blue)
+![Build](https://img.shields.io/badge/Gradle-Compile-passes-success)
+
+## Equipo de Trabajo
+
+| Código | Integrante | Usuario GitHub | Rama propia |
+|--------|------------|----------------|-------------|
+| AC200739 | JONATHAN ALEXANDER ALBERTO CRUZ | @Jonixmax | `AC200739` |
+| AM240357 | VLADIMIR JOSUE AGUILA MENDEZ | @MUSIKATO | `AM240357` |
+| LM252002 | BRYAN OTONIEL LOARCA MONTENEGRO | @lm252002 | `LM252002` |
+| JC252637 | FERNANDO ALEXANDER JUAREZ COTO | @Ferrrnando123 | `jc252637` |
+| AR180405 | RICARDO ERNESO ALFARO RECINOS | @RicardoAlf | `ar180405` |
 
 ## Descripción del Proyecto
 
@@ -201,17 +216,20 @@ TicketFlow.Mobile-main/
 
 ### Requisitos previos
 
-- Android Studio (versión reciente con soporte para Kotlin y Jetpack Compose)
-- Android SDK configurado
+- **Android Studio** (versión reciente con soporte para Kotlin y Jetpack Compose, p. ej. Giraffe/2024.2.1 o superior)
+- **JDK** 17 o 21 (configurado en Android Studio > Settings > Build > Build Tools > Gradle)
+- **Android SDK** configurado (platform-tools, build-tools y SDK Platform del nivel usado por el proyecto)
+- **Dispositivo Android** o emulador con depuración USB activada
+- **Cuenta de Supabase** con un proyecto creado (para obtener URL y clave pública)
 - Archivo `local.properties` en la raíz del proyecto con la ruta del SDK y las credenciales de Supabase:
 
 ```properties
-sdk.dir=C:\\Users\\<usuario>\\AppData\\Local\\Android\\Sdk
+sdk.dir=C:\Users\<usuario>\AppData\Local\Android\Sdk
 supabase.url=https://<tu-proyecto>.supabase.co
 supabase.key=<tu-clave-publicable>
 ```
 
-Puede copiarse y completarse a partir de `local.properties.example`.
+`local.properties` se genera a partir de `local.properties.example` y **no se versiona** (está en `.gitignore`). Consulte la guía detallada en `docs/INSTALL.md` para el paso a paso de configuración.
 
 ### Compilar la aplicación
 
@@ -234,6 +252,108 @@ Puede copiarse y completarse a partir de `local.properties.example`.
 ### Ejecutar la aplicación
 
 Conectar un dispositivo Android o iniciar un emulador y ejecutar el proyecto desde Android Studio (`Run 'app'`). La Activity lanzadora es `MainActivity`.
+
+## Configuración de Supabase (Backend)
+
+TicketFlow Mobile utiliza Supabase como backend exclusivo: autenticación (Auth), base de datos PostgreSQL (PostgREST) y almacenamiento de archivos (Storage). Estos pasos se realizan en **Supabase Dashboard** (app.supabase.com).
+
+### URL y clave pública
+
+Obtenga los valores en **Settings → API** de su proyecto de Supabase:
+
+- **Project URL**: asignar a `supabase.url` en `local.properties`
+- **Anon public / Publishable key**: asignar a `supabase.key` en `local.properties` (empieza por `sb_publishable_...`)
+
+### Tablas de la base de datos
+
+Crear en **Database → Table Editor** (o ejecutar el DDL equivalente):
+
+**Tabla `profiles`**
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | uuid | PK; coincide con `auth.users.id` (UID de Supabase Auth) |
+| `nombre` | text | Nombre del usuario, editable |
+| `correo` | text | Correo del usuario (gestionado por Auth) |
+| `rol` | text | `"admin"` o `"usuario"` |
+| `fecha_creacion` | timestamp | Fecha de creación del perfil |
+
+**Tabla `tickets`**
+
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | bigint | PK autoincremental |
+| `equipo` | text | Equipo afectado |
+| `tipo_incidencia` | text | Tipo de incidencia |
+| `descripcion` | text | Descripción del ticket |
+| `prioridad` | text | `Baja`, `Media`, `Alta`, `Critica` |
+| `estado` | text | `Pendiente`, `En proceso`, `Solucionado` |
+| `created_at` | timestamp | Fecha de creación |
+| `profile` | uuid | FK lógica a `profiles.id` (UID del dueño) |
+| `evidencia_url` | text | URL pública de la evidencia en Storage (nullable) |
+
+> Nota: el código asume que un **trigger** de Supabase crea automáticamente la fila en `profiles` al registrarse un usuario en Auth (email o OAuth Google/Facebook). Verifique su existencia en **Database → Triggers**.
+
+### Bucket de Storage
+
+Crear en **Storage → Buckets**:
+
+- **Nombre del bucket**: `foto_ticket`
+- **Público**: sí (para permitir lectura pública de las evidencias mediante `publicUrl`)
+- **Estructura de objetos**: `evidencia/<timestamp>.jpg`
+
+Configure las políticas de acceso según sea necesario (lectura pública para las evidencias, escritura para usuarios autenticados).
+
+### Políticas RLS (Row Level Security)
+
+Habilite RLS en ambas tablas y agregue políticas similares a estas:
+
+| Tabla | Operación | Política sugerida |
+|-------|-----------|-------------------|
+| `profiles` | SELECT | `auth.uid() = id` |
+| `profiles` | UPDATE | `auth.uid() = id` |
+| `tickets` | SELECT | `auth.uid() = profile` (usuarios); sin restricción de rol para admins |
+| `tickets` | INSERT | `auth.uid() = profile` |
+| `tickets` | UPDATE/DELETE | `auth.uid() = profile` o rol `admin` |
+
+> Estas políticas son referenciales. Revíselas y ajústelas según los requisitos de seguridad del proyecto en **Database → Policies**.
+
+## Configuración de OAuth y Deep Links
+
+### Google OAuth
+
+1. En **Google Cloud Console**, cree un **OAuth 2.0 Client ID** (tipo aplicación Android o Web según el flujo).
+2. En **Supabase Dashboard → Authentication → Providers → Google**, habilite Google y configure:
+   - Client ID
+   - Client Secret
+3. En **Google Cloud Console**, agregue la URI de redirect autorizada:
+   ```
+   https://<su-proyecto>.supabase.co/auth/v1/callback
+   ```
+4. En **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**, agregue:
+   ```
+   ticketflow://auth/callback
+   ```
+
+### Facebook OAuth
+
+1. En **Facebook for Developers**, cree una aplicación y obtenga el **App ID** y **App Secret**.
+2. En **Supabase Dashboard → Authentication → Providers → Facebook**, habilite Facebook y configure:
+   - App ID
+   - App Secret
+
+### Deep links (`ticketflow://auth/callback`)
+
+El flujo de retorno de OAuth utiliza el deep link `ticketflow://auth/callback`, declarado en `AndroidManifest.xml`:
+
+- **Scheme**: `ticketflow`
+- **Host**: `auth`
+- **Path**: `/callback`
+- **Intent-filter**: `VIEW`, `DEFAULT`, `BROWSABLE`
+
+`MainActivity` procesa el intent del callback mediante `handleDeeplinks` del SDK de Supabase (con deduplicación de intents para evitar procesar dos veces el mismo callback), tanto en `onCreate` (arranque en frío) como en `onNewIntent`.
+
+Asegúrese de que `ticketflow://auth/callback` esté registrado en **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs** para que el proveedor OAuth pueda redirigir de vuelta a la aplicación.
 
 ## Consola de Escritorio (Etapa 2)
 
@@ -270,6 +390,14 @@ Los datos de la consola se mantienen en memoria durante la ejecución y no persi
 - Las credenciales de Supabase se configuran en `local.properties` (`supabase.url`, `supabase.key`), archivo que no se versiona; consultar `local.properties.example` como plantilla.
 - Las políticas RLS, los triggers y la configuración de los proveedores Google y Facebook OAuth se gestionan desde el panel de Supabase.
 - El proyecto cuenta con documentación técnica adicional en la carpeta `docs/`.
+
+## Documentación
+
+| Documento | Ruta | Descripción |
+|-----------|------|-------------|
+| Material Técnico Parte 1 | `docs/MATERIAL_TECNICO_PARTE-1.md` | Especificaciones técnicas de la arquitectura y módulos |
+| Pruebas de Integración Supabase | `docs/PRUEBAS_INTEGRACION_SUPABASE.md` | Plan y resultados de pruebas contra el backend |
+| Documentación Parte 2 | `DOCUMENTACION_PARTE_2_VLADIMIR.md` | Documentación adicional de la consola y etapa 2 |
 
 ## Licencia
 

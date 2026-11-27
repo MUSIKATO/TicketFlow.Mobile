@@ -215,10 +215,22 @@ fun AdminTeamsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "No hay dispositivos que coincidan con la búsqueda.",
+                                    text = if (state.searchQuery.isNotBlank()) {
+                                        "No hay dispositivos que coincidan con '${state.searchQuery}'."
+                                    } else {
+                                        "No hay dispositivos registrados en el inventario."
+                                    },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = TextSecondary
                                 )
+                                if (state.searchQuery.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { viewModel.onSearchQueryChanged("") }
+                                    ) {
+                                        Text("Limpiar búsqueda")
+                                    }
+                                }
                             }
                         }
                     }
@@ -230,6 +242,18 @@ fun AdminTeamsScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        item {
+                            Text(
+                                text = if (state.searchQuery.isBlank()) {
+                                    "${filteredEquipos.size} equipos registrados en inventario"
+                                } else {
+                                    "${filteredEquipos.size} coincidencias encontradas"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary,
+                                modifier = Modifier.padding(bottom = 2.dp)
+                            )
+                        }
                         items(filteredEquipos, key = { it.nombre }) { equipo ->
                             AdminEquipoCard(equipo = equipo)
                         }

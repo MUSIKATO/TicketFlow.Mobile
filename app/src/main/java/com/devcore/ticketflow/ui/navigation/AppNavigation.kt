@@ -11,11 +11,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.devcore.ticketflow.AdminActivity
 import com.devcore.ticketflow.SupabaseClient
 import com.devcore.ticketflow.ui.components.AdminBottomNavigation
 import com.devcore.ticketflow.ui.components.UserBottomNavigation
 import com.devcore.ticketflow.ui.screens.admin.AdminDashboardScreen
+import com.devcore.ticketflow.ui.screens.admin.AdminHistoryScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminProfileScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminReportsScreen
 import com.devcore.ticketflow.ui.screens.admin.AdminTeamsScreen
@@ -45,12 +45,60 @@ fun AppNavigation(
                 SupabaseClient.client.auth.signOut()
                 SupabaseClient.perfil = null
             } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e // Re-throw CancellationException to maintain proper cancellation
+                throw e
             } catch (e: Exception) {
-                // Log error if needed - signOut failure should not prevent navigation
+                // signOut failure should not prevent local navigation
             }
             navController.navigate(NavRoutes.LOGIN) {
                 popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    // Navegación centralizada para la barra inferior de usuario con prevención de duplicados
+    fun navigateUser(route: String) {
+        when (route) {
+            "user_dashboard" -> navController.navigate(NavRoutes.USER_DASHBOARD) {
+                popUpTo(NavRoutes.USER_DASHBOARD) { inclusive = true }
+                launchSingleTop = true
+            }
+            "user_tickets" -> navController.navigate(NavRoutes.USER_TICKETS) {
+                popUpTo(NavRoutes.USER_DASHBOARD)
+                launchSingleTop = true
+            }
+            "user_profile" -> navController.navigate(NavRoutes.USER_PROFILE) {
+                popUpTo(NavRoutes.USER_DASHBOARD)
+                launchSingleTop = true
+            }
+        }
+    }
+
+    // Navegación centralizada para la barra inferior de administrador con prevención de duplicados
+    fun navigateAdmin(route: String) {
+        when (route) {
+            "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
+                launchSingleTop = true
+            }
+            "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
+            }
+            "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
+            }
+            "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
+            }
+            "admin_reports" -> navController.navigate(NavRoutes.ADMIN_REPORTS) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
+            }
+            "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
             }
         }
     }
@@ -61,7 +109,7 @@ fun AppNavigation(
         modifier = modifier
     ) {
         // ==========================================
-        // INTEGRANTE 1: AUTENTICACIÓN
+        // AUTENTICACIÓN
         // ==========================================
         composable(NavRoutes.LOGIN) {
             LoginScreen(
@@ -80,9 +128,6 @@ fun AppNavigation(
             )
         }
 
-        // ==========================================
-        // INTEGRANTE 2: REGISTRO Y DASHBOARD USUARIO
-        // ==========================================
         composable(NavRoutes.REGISTER) {
             RegisterScreen(
                 onNavigateToLogin = {
@@ -90,35 +135,23 @@ fun AppNavigation(
                         popUpTo(NavRoutes.LOGIN) { inclusive = true }
                     }
                 },
-                onRegistrationCompleted = { requiresConfirmation ->
-                    // La navegación ahora se maneja manualmente desde el diálogo de confirmación
-                    // No se usa este callback porque el diálogo permanece visible hasta que el usuario pulse el botón
-                }
+                onRegistrationCompleted = { _ -> }
             )
         }
 
+        // ==========================================
+        // DASHBOARD Y TICKETS DE USUARIO
+        // ==========================================
         composable(NavRoutes.USER_DASHBOARD) {
             androidx.compose.material3.Scaffold(
                 bottomBar = {
                     UserBottomNavigation(
                         selectedRoute = "user_dashboard",
-                        onNavigate = { route ->
-                            when (route) {
-                                "user_dashboard" -> navController.navigate(NavRoutes.USER_DASHBOARD) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD) { inclusive = true }
-                                }
-                                "user_tickets" -> navController.navigate(NavRoutes.USER_TICKETS) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                                "user_profile" -> navController.navigate(NavRoutes.USER_PROFILE) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateUser
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     UserDashboardScreen(
                         onNavigateToCreateTicket = {
                             navController.navigate(NavRoutes.CREATE_TICKET)
@@ -137,15 +170,12 @@ fun AppNavigation(
             }
         }
 
-        // ==========================================
-        // INTEGRANTE 3: TICKETS (CREACIÓN, LISTADO, DETALLE)
-        // ==========================================
         composable(NavRoutes.CREATE_TICKET) {
             CreateTicketScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onTicketCreated = { ticketId ->
                     navController.navigate(NavRoutes.ticketDetail(ticketId)) {
-                        popUpTo(NavRoutes.USER_TICKETS) { inclusive = false }
+                        popUpTo(NavRoutes.CREATE_TICKET) { inclusive = true }
                     }
                 }
             )
@@ -156,23 +186,11 @@ fun AppNavigation(
                 bottomBar = {
                     UserBottomNavigation(
                         selectedRoute = "user_tickets",
-                        onNavigate = { route ->
-                            when (route) {
-                                "user_dashboard" -> navController.navigate(NavRoutes.USER_DASHBOARD) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD) { inclusive = true }
-                                }
-                                "user_tickets" -> navController.navigate(NavRoutes.USER_TICKETS) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                                "user_profile" -> navController.navigate(NavRoutes.USER_PROFILE) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateUser
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     UserTicketsScreen(
                         onNavigateToDetail = { ticketId ->
                             navController.navigate(NavRoutes.ticketDetail(ticketId))
@@ -205,36 +223,18 @@ fun AppNavigation(
         }
 
         // ==========================================
-        // INTEGRANTE 4: DASHBOARD Y GESTIÓN ADMINISTRATIVA
+        // MÓDULOS DE ADMINISTRADOR
         // ==========================================
         composable(NavRoutes.ADMIN_DASHBOARD) {
             androidx.compose.material3.Scaffold(
                 bottomBar = {
                     AdminBottomNavigation(
                         selectedRoute = "admin_dashboard",
-                        onNavigate = { route ->
-                            when (route) {
-                                "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
-                                }
-                                "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateAdmin
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     AdminDashboardScreen(
                         onNavigateToTickets = {
                             navController.navigate(NavRoutes.ADMIN_TICKETS)
@@ -248,6 +248,9 @@ fun AppNavigation(
                         onNavigateToReports = {
                             navController.navigate(NavRoutes.ADMIN_REPORTS)
                         },
+                        onNavigateToHistory = {
+                            navController.navigate(NavRoutes.ADMIN_HISTORY)
+                        },
                         onSignOut = { performSignOut() }
                     )
                 }
@@ -259,29 +262,11 @@ fun AppNavigation(
                 bottomBar = {
                     AdminBottomNavigation(
                         selectedRoute = "admin_tickets",
-                        onNavigate = { route ->
-                            when (route) {
-                                "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
-                                }
-                                "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateAdmin
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     AdminTicketsScreen(
                         onNavigateBack = { navController.popBackStack() },
                         onNavigateToDetail = { ticketId ->
@@ -300,29 +285,11 @@ fun AppNavigation(
                 bottomBar = {
                     AdminBottomNavigation(
                         selectedRoute = "admin_users",
-                        onNavigate = { route ->
-                            when (route) {
-                                "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
-                                }
-                                "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateAdmin
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     AdminUsersScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
@@ -335,29 +302,11 @@ fun AppNavigation(
                 bottomBar = {
                     AdminBottomNavigation(
                         selectedRoute = "admin_teams",
-                        onNavigate = { route ->
-                            when (route) {
-                                "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
-                                }
-                                "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateAdmin
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     AdminTeamsScreen(
                         onNavigateBack = { navController.popBackStack() }
                     )
@@ -366,30 +315,18 @@ fun AppNavigation(
         }
 
         // ==========================================
-        // INTEGRANTE 5: PERFIL Y REPORTES
+        // PERFILES Y REPORTES
         // ==========================================
         composable(NavRoutes.USER_PROFILE) {
             androidx.compose.material3.Scaffold(
                 bottomBar = {
                     UserBottomNavigation(
                         selectedRoute = "user_profile",
-                        onNavigate = { route ->
-                            when (route) {
-                                "user_dashboard" -> navController.navigate(NavRoutes.USER_DASHBOARD) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD) { inclusive = true }
-                                }
-                                "user_tickets" -> navController.navigate(NavRoutes.USER_TICKETS) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                                "user_profile" -> navController.navigate(NavRoutes.USER_PROFILE) {
-                                    popUpTo(NavRoutes.USER_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateUser
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     UserProfileScreen(
                         onNavigateBack = { navController.popBackStack() },
                         onSignOut = { performSignOut() }
@@ -398,39 +335,16 @@ fun AppNavigation(
             }
         }
 
-        composable(NavRoutes.USER_EDIT_PROFILE) {
-            // No se necesita, la edición está integrada en UserProfileScreen
-            navController.popBackStack()
-        }
-
         composable(NavRoutes.ADMIN_PROFILE) {
             androidx.compose.material3.Scaffold(
                 bottomBar = {
                     AdminBottomNavigation(
                         selectedRoute = "admin_profile",
-                        onNavigate = { route ->
-                            when (route) {
-                                "admin_dashboard" -> navController.navigate(NavRoutes.ADMIN_DASHBOARD) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD) { inclusive = true }
-                                }
-                                "admin_tickets" -> navController.navigate(NavRoutes.ADMIN_TICKETS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_teams" -> navController.navigate(NavRoutes.ADMIN_TEAMS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_users" -> navController.navigate(NavRoutes.ADMIN_USERS) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                                "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
-                                    popUpTo(NavRoutes.ADMIN_DASHBOARD)
-                                }
-                            }
-                        }
+                        onNavigate = ::navigateAdmin
                     )
                 }
             ) { innerPadding ->
-                androidx.compose.foundation.layout.Box(modifier = Modifier.padding(innerPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     AdminProfileScreen(
                         onSignOut = { performSignOut() }
                     )
@@ -439,8 +353,28 @@ fun AppNavigation(
         }
 
         composable(NavRoutes.ADMIN_REPORTS) {
-            AdminReportsScreen(
-                onNavigateBack = { navController.popBackStack() }
+            androidx.compose.material3.Scaffold(
+                bottomBar = {
+                    AdminBottomNavigation(
+                        selectedRoute = "admin_reports",
+                        onNavigate = ::navigateAdmin
+                    )
+                }
+            ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    AdminReportsScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+
+        composable(NavRoutes.ADMIN_HISTORY) {
+            AdminHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { ticketId ->
+                    navController.navigate(NavRoutes.ticketDetail(ticketId))
+                }
             )
         }
     }

@@ -50,8 +50,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.devcore.ticketflow.ui.components.TicketCard
 import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.components.TicketFlowLoading
+import com.devcore.ticketflow.ui.components.formatTicketDate
 import com.devcore.ticketflow.ui.theme.CardStroke
 import com.devcore.ticketflow.ui.theme.PrimaryNavy
 import com.devcore.ticketflow.ui.theme.PriorityCritical
@@ -151,7 +153,7 @@ fun UserTicketsScreen(
 
             // Error banner si existe
             state.errorMessage?.let { error ->
-                TicketFlowErrorBanner(message = error)
+                TicketFlowErrorBanner(message = error, onDismiss = viewModel::dismissError)
                 Spacer(modifier = Modifier.height(14.dp))
             }
 
@@ -188,7 +190,7 @@ fun UserTicketsScreen(
 
             // ====== SECCIÓN 3: LISTADO DE TICKETS ======
             when {
-                state.isRefreshing && state.tickets.isEmpty() -> {
+                state.isLoading || (state.isRefreshing && state.tickets.isEmpty()) -> {
                     TicketFlowLoading(message = "Cargando tickets...")
                 }
                 state.tickets.isEmpty() -> {
@@ -200,7 +202,13 @@ fun UserTicketsScreen(
                     ) {
                         state.tickets.forEach { ticket ->
                             TicketCard(
-                                ticket = ticket,
+                                id = ticket.id,
+                                tipoIncidencia = ticket.tipo_incidencia,
+                                equipo = ticket.equipo,
+                                descripcion = ticket.descripcion,
+                                prioridad = ticket.prioridad,
+                                estado = ticket.estado,
+                                fecha = formatTicketDate(ticket.created_at),
                                 onClick = { onNavigateToDetail(ticket.id) }
                             )
                         }
@@ -247,116 +255,6 @@ private fun FilterChipItem(
 }
 
 @Composable
-private fun TicketCard(
-    ticket: TicketItem,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(
-                        text = "#${ticket.id}",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextSecondary
-                    )
-
-                    // Badge de Prioridad
-                    val (prioColor, prioBg) = prioridadColor(ticket.prioridad)
-                    BadgeBox(
-                        text = ticket.prioridad.ifEmpty { "Normal" },
-                        textColor = prioColor,
-                        backgroundColor = prioBg
-                    )
-
-                    // Badge de Estado
-                    val (estColor, estBg) = estadoColor(ticket.estado)
-                    BadgeBox(
-                        text = ticket.estado.ifEmpty { "Pendiente" },
-                        textColor = estColor,
-                        backgroundColor = estBg
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Ver detalle",
-                    tint = TextSecondary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = ticket.tipo_incidencia.ifEmpty { "Sin tipo de incidencia" },
-                style = MaterialTheme.typography.titleMedium,
-                color = TextPrimary,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = ticket.equipo.ifEmpty { "Sin equipo especificado" },
-                style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = ticket.descripcion.ifEmpty { "Sin descripción" },
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun BadgeBox(
-    text: String,
-    textColor: Color,
-    backgroundColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(backgroundColor)
-            .border(0.5.dp, textColor.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 7.dp, vertical = 2.dp)
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
 private fun EmptyTicketsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -392,19 +290,4 @@ private fun EmptyTicketsCard() {
             )
         }
     }
-}
-
-private fun prioridadColor(prioridad: String): Pair<Color, Color> = when (prioridad.lowercase()) {
-    "baja" -> StatusSuccessGreen to StatusSuccessGreenBg
-    "media" -> PriorityMedium to PriorityMediumBg
-    "alta" -> PriorityHigh to PriorityHighBg
-    "critica", "crítica" -> PriorityCritical to PriorityCriticalBg
-    else -> TextSecondary to CardStroke
-}
-
-private fun estadoColor(estado: String): Pair<Color, Color> = when (estado.lowercase()) {
-    "pendiente" -> StatusPending to StatusPendingBg
-    "en proceso" -> StatusInfoBlue to StatusInfoBlueBg
-    "solucionado" -> StatusSuccessGreen to StatusSuccessGreenBg
-    else -> TextSecondary to CardStroke
 }

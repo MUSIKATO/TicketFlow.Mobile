@@ -49,6 +49,7 @@ class AdminUsersViewModel : ViewModel() {
     }
 
     fun refrescar() {
+        if (_uiState.value.isRefreshing || _uiState.value.isLoading) return
         _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
         viewModelScope.launch {
             cargarUsuariosInternal()
@@ -57,6 +58,7 @@ class AdminUsersViewModel : ViewModel() {
     }
 
     fun cargarUsuarios() {
+        if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             cargarUsuariosInternal()
@@ -71,8 +73,6 @@ class AdminUsersViewModel : ViewModel() {
 
             val lista = withContext(Dispatchers.IO) {
                 Log.d("AdminUsersViewModel", "Consultando tabla profiles...")
-                Log.d("AdminUsersViewModel", "Sesión activa: ${SupabaseClient.client.auth.currentUserOrNull() != null}")
-                Log.d("AdminUsersViewModel", "Perfil cargado: ${SupabaseClient.perfil?.nombre}")
                 
                 val data = SupabaseClient.client.postgrest.from("profiles").select {
                     filter {
@@ -83,7 +83,6 @@ class AdminUsersViewModel : ViewModel() {
                     order(column = "nombre", order = Order.ASCENDING)
                 }.data
 
-                Log.d("AdminUsersViewModel", "Datos recibidos de Supabase: ${data.take(200)}...")
                 
                 if (data == "null" || data.isEmpty()) {
                     Log.d("AdminUsersViewModel", "Respuesta vacía de Supabase - posible denegación RLS o tabla vacía")
@@ -104,7 +103,7 @@ class AdminUsersViewModel : ViewModel() {
         } catch (e: kotlinx.serialization.SerializationException) {
             Log.e("AdminUsersViewModel", "Error de deserialización", e)
             _uiState.update {
-                it.copy(errorMessage = "Error al decodificar datos. El esquema de la tabla no coincide con el modelo Profile. Error: ${e.message}")
+                it.copy(errorMessage = "No se pudieron leer los datos de los usuarios. Inténtalo de nuevo más tarde.")
             }
         } catch (e: java.net.UnknownHostException) {
             Log.e("AdminUsersViewModel", "Error de red - sin conexión", e)
@@ -114,7 +113,7 @@ class AdminUsersViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.e("AdminUsersViewModel", "Error al cargar profiles de Supabase", e)
             _uiState.update {
-                it.copy(errorMessage = "No se pudieron obtener los usuarios registrados. Error: ${e.message}")
+                it.copy(errorMessage = "No se pudieron obtener los usuarios registrados. Verifica la conexión y tus permisos.")
             }
         }
     }

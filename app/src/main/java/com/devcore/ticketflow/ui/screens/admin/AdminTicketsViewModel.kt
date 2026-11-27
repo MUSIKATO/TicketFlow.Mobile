@@ -45,8 +45,16 @@ data class AdminTicketsUiState(
     val updatingTicketId: Long? = null,
     val actionMessage: String? = null,
     val errorMessage: String? = null,
-    val editingTicket: AdminTicketItem? = null
+    val editingTicket: AdminTicketItem? = null,
+    val viewMode: ViewMode = ViewMode.TICKETS,
+    val auditLogs: List<TicketAuditLog> = emptyList(),
+    val isLoadingLogs: Boolean = false
 )
+
+enum class ViewMode {
+    TICKETS,
+    HISTORY
+}
 
 class AdminTicketsViewModel : ViewModel() {
 
@@ -61,8 +69,36 @@ class AdminTicketsViewModel : ViewModel() {
 
     fun onStatusFilterSelected(status: String?) {
         if (_uiState.value.selectedStatusFilter == status) return
-        _uiState.update { it.copy(selectedStatusFilter = status) }
+        _uiState.update { it.copy(selectedStatusFilter = status, viewMode = ViewMode.TICKETS) }
         cargarTickets()
+    }
+
+    fun toggleViewMode(mode: ViewMode) {
+        if (_uiState.value.viewMode == mode) return
+        _uiState.update { it.copy(viewMode = mode, errorMessage = null) }
+        if (mode == ViewMode.HISTORY) cargarAuditLogs() else cargarTickets()
+    }
+
+    private fun cargarAuditLogs() {
+        _uiState.update { it.copy(isLoadingLogs = true, errorMessage = null) }
+        viewModelScope.launch {
+            try {
+                val logs = withContext(Dispatchers.IO) {
+                    // Consultar la vista que ya incluye el JOIN con profiles
+                    val data = SupabaseClient.client.postgrest.from("ticket_audit_logs_with_user").select {
+                        order(column = "created_at", order = Order.DESCENDING)
+                        limit(100)
+                    }.data
+                    json.decodeFromString<List<TicketAuditLog>>(data)
+                }
+                _uiState.update { it.copy(auditLogs = logs, isLoadingLogs = false, errorMessage = null) }
+            } catch (e: Exception) {
+                Log.e("AdminTicketsViewModel", "Error al cargar logs de auditoría", e)
+                _uiState.update {
+                    it.copy(isLoadingLogs = false, errorMessage = "No se pudo cargar el historial de modificaciones. Verifica la conexión y los permisos de administrador.")
+                }
+            }
+        }
     }
 
     fun onPriorityFilterSelected(priority: String?) {
@@ -126,6 +162,7 @@ class AdminTicketsViewModel : ViewModel() {
     fun actualizarEstadoTicket(ticketId: Long, nuevoEstado: String) {
         val validStates = listOf("Pendiente", "En proceso", "Solucionado")
         if (nuevoEstado !in validStates) return
+        if (_uiState.value.updatingTicketId != null) return // Prevenir llamadas concurrentes
 
         _uiState.update { it.copy(updatingTicketId = ticketId, errorMessage = null, actionMessage = null) }
 
@@ -168,6 +205,7 @@ class AdminTicketsViewModel : ViewModel() {
     fun actualizarPrioridadTicket(ticketId: Long, nuevaPrioridad: String) {
         val validPriorities = listOf("Baja", "Media", "Alta", "Critica")
         if (nuevaPrioridad !in validPriorities) return
+        if (_uiState.value.updatingTicketId != null) return // Prevenir llamadas concurrentes
 
         _uiState.update { it.copy(updatingTicketId = ticketId, errorMessage = null, actionMessage = null) }
 
@@ -185,13 +223,14 @@ class AdminTicketsViewModel : ViewModel() {
                 }
 
                 _uiState.update { state ->
+                    val displayPrioridad = if (nuevaPrioridad == "Critica") "Crítica" else nuevaPrioridad
                     val updated = state.tickets.map {
                         if (it.id == ticketId) it.copy(prioridad = nuevaPrioridad) else it
                     }
                     state.copy(
                         tickets = updated,
                         updatingTicketId = null,
-                        actionMessage = "Prioridad del Ticket #$ticketId cambiada a '$nuevaPrioridad'"
+                        actionMessage = "Prioridad del Ticket #$ticketId cambiada a '$displayPrioridad'"
                     )
                 }
             } catch (e: Exception) {
@@ -213,7 +252,7 @@ class AdminTicketsViewModel : ViewModel() {
     fun iniciarEdicion(ticketId: Long) {
         val ticket = _uiState.value.tickets.find { it.id == ticketId }
         if (ticket != null) {
-            _uiState.update { it.copy(editingTicket = ticket) }
+            _uiState.update { it.copy(editingTicket = ticket, errorMessage = null) }
         } else {
             viewModelScope.launch {
                 cargarTicketParaEdicion(ticketId)
@@ -231,7 +270,7 @@ class AdminTicketsViewModel : ViewModel() {
                 json.decodeFromString<List<AdminTicketItem>>(data).firstOrNull()
             }
             if (ticket != null) {
-                _uiState.update { it.copy(editingTicket = ticket) }
+                _uiState.update { it.copy(editingTicket = ticket, errorMessage = null) }
             } else {
                 _uiState.update { it.copy(errorMessage = "No se encontró el ticket #$ticketId") }
             }
@@ -242,19 +281,21 @@ class AdminTicketsViewModel : ViewModel() {
     }
 
     fun cancelarEdicion() {
-        _uiState.update { it.copy(editingTicket = null) }
+        _uiState.update { it.copy(editingTicket = null, errorMessage = null) }
     }
 
     fun guardarEdicion(ticketEditado: AdminTicketItem) {
         val editingTicket = _uiState.value.editingTicket ?: return
+        if (_uiState.value.updatingTicketId != null) return // Prevenir envíos concurrentes
+
         _uiState.update { it.copy(updatingTicketId = editingTicket.id, errorMessage = null) }
 
         viewModelScope.launch {
             try {
                 val payload = buildJsonObject {
-                    put("equipo", JsonPrimitive(ticketEditado.equipo))
-                    put("tipo_incidencia", JsonPrimitive(ticketEditado.tipoIncidencia))
-                    put("descripcion", JsonPrimitive(ticketEditado.descripcion))
+                    put("equipo", JsonPrimitive(ticketEditado.equipo.trim()))
+                    put("tipo_incidencia", JsonPrimitive(ticketEditado.tipoIncidencia.trim()))
+                    put("descripcion", JsonPrimitive(ticketEditado.descripcion.trim()))
                     put("prioridad", JsonPrimitive(ticketEditado.prioridad))
                     put("estado", JsonPrimitive(ticketEditado.estado))
                 }
@@ -268,7 +309,11 @@ class AdminTicketsViewModel : ViewModel() {
 
                 _uiState.update { state ->
                     val updated = state.tickets.map {
-                        if (it.id == editingTicket.id) ticketEditado else it
+                        if (it.id == editingTicket.id) ticketEditado.copy(
+                            equipo = ticketEditado.equipo.trim(),
+                            tipoIncidencia = ticketEditado.tipoIncidencia.trim(),
+                            descripcion = ticketEditado.descripcion.trim()
+                        ) else it
                     }
                     state.copy(
                         tickets = updated,
@@ -291,6 +336,7 @@ class AdminTicketsViewModel : ViewModel() {
     }
 
     fun eliminarTicket(ticketId: Long) {
+        if (_uiState.value.updatingTicketId != null) return // Prevenir eliminaciones concurrentes
         _uiState.update { it.copy(updatingTicketId = ticketId, errorMessage = null, actionMessage = null) }
 
         viewModelScope.launch {

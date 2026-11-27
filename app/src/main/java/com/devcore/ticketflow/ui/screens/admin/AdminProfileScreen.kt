@@ -178,6 +178,8 @@ fun AdminProfileScreen(
                             value = state.userEmail,
                             onValueChange = viewModel::onCorreoChange,
                             label = { Text("Correo electrónico") },
+                            supportingText = { Text("El correo es tu usuario de acceso y no se puede cambiar aquí") },
+                            readOnly = true,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !state.isSaving,
                             colors = OutlinedTextFieldDefaults.colors(

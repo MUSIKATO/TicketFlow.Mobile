@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
@@ -73,6 +74,7 @@ fun AdminDashboardScreen(
     onNavigateToUsers: () -> Unit,
     onNavigateToTeams: () -> Unit,
     onNavigateToReports: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AdminDashboardViewModel = viewModel()
@@ -102,7 +104,7 @@ fun AdminDashboardScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Hola, Administrador",
+                                text = "Hola, ${state.adminName}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
@@ -299,6 +301,13 @@ fun AdminDashboardScreen(
                 description = "Estadísticas y análisis de incidencias",
                 icon = Icons.Default.ConfirmationNumber,
                 onClick = onNavigateToReports
+            )
+
+            AdminModuleActionCard(
+                title = "Historial de registros",
+                description = "Consulta cronológica de tickets registrados",
+                icon = Icons.Default.History,
+                onClick = onNavigateToHistory
             )
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -1,4 +1,4 @@
-package com.devcore.ticketflow
+﻿package com.devcore.ticketflow
 
 import android.util.Log
 import io.github.jan.supabase.createSupabaseClient
@@ -11,10 +11,13 @@ object SupabaseClient {
 
     val client = try {
         createSupabaseClient(
-            supabaseUrl = "https://rsqayszvxrcgvylquzog.supabase.co",
+                       supabaseUrl = "https://rsqayszvxrcgvylquzog.supabase.co",
             supabaseKey = "sb_publishable_cCCulG6WfHEr-BRaG36bBQ_3rTbTL3Z"
         ) {
-            install(Auth)
+            install(Auth) {
+                scheme = "ticketflow"
+                host = "auth"
+            }
             install(Postgrest)
             install(Storage)
             install(Realtime)

@@ -3,6 +3,7 @@ package com.devcore.ticketflow.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Group
@@ -49,6 +50,11 @@ fun AdminBottomNavigation(
             label = "Usuarios"
         ),
         BottomNavItem(
+            route = "admin_reports",
+            icon = Icons.Default.BarChart,
+            label = "Reportes"
+        ),
+        BottomNavItem(
             route = "admin_profile",
             icon = Icons.Default.Person,
             label = "Perfil"
@@ -70,7 +76,15 @@ fun AdminBottomNavigation(
                         contentDescription = item.label
                     )
                 },
-                label = { Text(item.label) },
+                label = {
+                    Text(
+                        text = item.label,
+                        maxLines = 1,
+                        softWrap = false,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelSmall
+                    )
+                },
+                alwaysShowLabel = false,
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = CorporateNavy,
                     selectedTextColor = CorporateNavy,

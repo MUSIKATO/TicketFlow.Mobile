@@ -377,5 +377,14 @@ fun AppNavigation(
                 }
             )
         }
+
+        composable(NavRoutes.ADMIN_HISTORY) {
+            AdminHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { ticketId ->
+                    navController.navigate(NavRoutes.ticketDetail(ticketId))
+                }
+            )
+        }
     }
 }

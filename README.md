@@ -7,15 +7,17 @@
 ![Supabase](https://img.shields.io/badge/Supabase-Backend-blue)
 ![Build](https://img.shields.io/badge/Gradle-Compile-passes-success)
 
-## Equipo de Trabajo
+## Equipo de Trabajo y Colaboración
 
-| Código | Integrante | Usuario GitHub | Rama propia |
-|--------|------------|----------------|-------------|
-| AC200739 | JONATHAN ALEXANDER ALBERTO CRUZ | @Jonixmax | `AC200739` |
-| AM240357 | VLADIMIR JOSUE AGUILA MENDEZ | @MUSIKATO | `AM240357` |
-| LM252002 | BRYAN OTONIEL LOARCA MONTENEGRO | @lm252002 | `LM252002` |
-| JC252637 | FERNANDO ALEXANDER JUAREZ COTO | @Ferrrnando123 | `jc252637` |
-| AR180405 | RICARDO ERNESO ALFARO RECINOS | @RicardoAlf | `ar180405` |
+Todos los integrantes participan como colaboradores activos en el repositorio de GitHub, trabajando en ramas individuales por carné para mantener la trazabilidad de sus aportes:
+
+| Integrante | Carnet | Responsabilidades y aportes realizados |
+|---|---|---|
+| Jonathan Alexander Alberto Cruz | AC200739 | Implementación del módulo de autenticación, configuración de seguridad e integración con Supabase. |
+| Vladimir Josué Aguila Méndez | AM240357 | Desarrollo de la gestión de tickets, operaciones CRUD y funcionalidades principales de la aplicación. |
+| Bryan Otoniel Loarca Montenegro | LM252002 | Desarrollo de funcionalidades complementarias, módulo de auditoría y registro de actividades de los tickets. |
+| Fernando Alexander Juarez Coto | JC252637 | Diseño de interfaces, experiencia de usuario (UX/UI) e implementación visual mediante Jetpack Compose y Material 3. |
+| Ricardo Ernesto Alfaro Recinos | AR180405 | Organización del repositorio, documentación técnica del proyecto y gestión del licenciamiento. |
 
 ## Descripción del Proyecto
 
@@ -86,6 +88,12 @@ La interfaz de la aplicación está implementada en **Jetpack Compose**:
 - El tema Material 3 se define en `ui/theme/`.
 
 El proyecto también conserva Activities con layouts XML de etapas anteriores del desarrollo (`AdminActivity`, `UserActivity`, `UserDashboardActivity`, `UserTicketsActivity`, `UserProfileActivity`, `UserEditProfileActivity`, `UserCreateTicketActivity`, `UserTicketDetailActivity`) junto a sus layouts en `app/src/main/res/layout/`. Estas pantallas forman parte del historial del proyecto y no interfieren con el flujo de navegación actual.
+
+### Diseño UX/UI — Mockups
+
+Los diseños y mockups previos de TicketFlow Mobile fueron elaborados en **Google Stitch**, sirviendo como referencia visual y estructural para la interfaz implementada en Android con **Jetpack Compose** y **Material Design 3**.
+
+- [Ver mockups de TicketFlow Mobile en Google Stitch](https://stitch.google.com/projects/5369915440972903904)
 
 ## Funcionalidades Principales
 

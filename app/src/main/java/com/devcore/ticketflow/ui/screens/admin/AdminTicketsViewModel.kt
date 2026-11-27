@@ -45,8 +45,16 @@ data class AdminTicketsUiState(
     val updatingTicketId: Long? = null,
     val actionMessage: String? = null,
     val errorMessage: String? = null,
-    val editingTicket: AdminTicketItem? = null
+    val editingTicket: AdminTicketItem? = null,
+    val viewMode: ViewMode = ViewMode.TICKETS,
+    val auditLogs: List<TicketAuditLog> = emptyList(),
+    val isLoadingLogs: Boolean = false
 )
+
+enum class ViewMode {
+    TICKETS,
+    HISTORY
+}
 
 class AdminTicketsViewModel : ViewModel() {
 
@@ -61,8 +69,36 @@ class AdminTicketsViewModel : ViewModel() {
 
     fun onStatusFilterSelected(status: String?) {
         if (_uiState.value.selectedStatusFilter == status) return
-        _uiState.update { it.copy(selectedStatusFilter = status) }
+        _uiState.update { it.copy(selectedStatusFilter = status, viewMode = ViewMode.TICKETS) }
         cargarTickets()
+    }
+
+    fun toggleViewMode(mode: ViewMode) {
+        if (_uiState.value.viewMode == mode) return
+        _uiState.update { it.copy(viewMode = mode, errorMessage = null) }
+        if (mode == ViewMode.HISTORY) cargarAuditLogs() else cargarTickets()
+    }
+
+    private fun cargarAuditLogs() {
+        _uiState.update { it.copy(isLoadingLogs = true, errorMessage = null) }
+        viewModelScope.launch {
+            try {
+                val logs = withContext(Dispatchers.IO) {
+                    // Consultar la vista que ya incluye el JOIN con profiles
+                    val data = SupabaseClient.client.postgrest.from("ticket_audit_logs_with_user").select {
+                        order(column = "created_at", order = Order.DESCENDING)
+                        limit(100)
+                    }.data
+                    json.decodeFromString<List<TicketAuditLog>>(data)
+                }
+                _uiState.update { it.copy(auditLogs = logs, isLoadingLogs = false, errorMessage = null) }
+            } catch (e: Exception) {
+                Log.e("AdminTicketsViewModel", "Error al cargar logs de auditoría", e)
+                _uiState.update {
+                    it.copy(isLoadingLogs = false, errorMessage = "No se pudo cargar el historial de modificaciones. Verifica la conexión y los permisos de administrador.")
+                }
+            }
+        }
     }
 
     fun onPriorityFilterSelected(priority: String?) {

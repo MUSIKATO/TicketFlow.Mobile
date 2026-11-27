@@ -92,6 +92,10 @@ fun AppNavigation(
                 popUpTo(NavRoutes.ADMIN_DASHBOARD)
                 launchSingleTop = true
             }
+            "admin_reports" -> navController.navigate(NavRoutes.ADMIN_REPORTS) {
+                popUpTo(NavRoutes.ADMIN_DASHBOARD)
+                launchSingleTop = true
+            }
             "admin_profile" -> navController.navigate(NavRoutes.ADMIN_PROFILE) {
                 popUpTo(NavRoutes.ADMIN_DASHBOARD)
                 launchSingleTop = true
@@ -349,8 +353,28 @@ fun AppNavigation(
         }
 
         composable(NavRoutes.ADMIN_REPORTS) {
-            AdminReportsScreen(
-                onNavigateBack = { navController.popBackStack() }
+            androidx.compose.material3.Scaffold(
+                bottomBar = {
+                    AdminBottomNavigation(
+                        selectedRoute = "admin_reports",
+                        onNavigate = ::navigateAdmin
+                    )
+                }
+            ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    AdminReportsScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+            }
+        }
+
+        composable(NavRoutes.ADMIN_HISTORY) {
+            AdminHistoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { ticketId ->
+                    navController.navigate(NavRoutes.ticketDetail(ticketId))
+                }
             )
         }
 

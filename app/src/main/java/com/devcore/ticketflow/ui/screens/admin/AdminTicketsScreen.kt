@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -68,9 +69,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.devcore.ticketflow.ui.screens.admin.ViewMode
 import com.devcore.ticketflow.ui.components.TicketFlowErrorBanner
 import com.devcore.ticketflow.ui.components.TicketFlowLoading
 import com.devcore.ticketflow.ui.theme.CardStroke
+import com.devcore.ticketflow.ui.theme.PriorityCritical
+import com.devcore.ticketflow.ui.theme.StatusInfoBlue
+import com.devcore.ticketflow.ui.theme.StatusSuccessGreen
 import com.devcore.ticketflow.ui.theme.PrimaryNavy
 import com.devcore.ticketflow.ui.theme.PriorityCritical
 import com.devcore.ticketflow.ui.theme.PriorityCriticalBg
@@ -184,7 +189,7 @@ fun AdminTicketsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Filtros de Estado
+            // Filtros de Estado y modo Historial
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -192,6 +197,24 @@ fun AdminTicketsScreen(
                     .padding(horizontal = 16.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val isHistoryMode = state.viewMode == ViewMode.HISTORY
+                FilterChip(
+                    selected = isHistoryMode,
+                    onClick = { viewModel.toggleViewMode(if (isHistoryMode) ViewMode.TICKETS else ViewMode.HISTORY) },
+                    label = { Text("Historial", fontSize = 12.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = StatusInfoBlue,
+                        selectedLabelColor = Color.White,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        labelColor = TextSecondary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isHistoryMode,
+                        borderColor = if (isHistoryMode) StatusInfoBlue else CardStroke
+                    )
+                )
+
                 val statusFilters = listOf(
                     "Todos los estados" to null,
                     "Pendiente" to "Pendiente",
@@ -311,6 +334,65 @@ fun AdminTicketsScreen(
             }
 
             when {
+                state.viewMode == ViewMode.HISTORY -> {
+                    when {
+                        state.isLoadingLogs && state.auditLogs.isEmpty() -> {
+                            TicketFlowLoading(
+                                message = "Cargando historial de modificaciones...",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        state.auditLogs.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardStroke))
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarToday,
+                                            contentDescription = null,
+                                            tint = TextSecondary.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(52.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(14.dp))
+                                        Text(
+                                            text = "No hay modificaciones registradas",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextPrimary
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Aún no se han realizado cambios en los tickets.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TextSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                items(state.auditLogs, key = { it.id }) { log ->
+                                    AuditLogCard(log = log, onNavigateToDetail = { onNavigateToDetail(log.ticketId) })
+                                }
+                            }
+                        }
+                    }
+                }
                 state.isLoading && state.tickets.isEmpty() -> {
                     TicketFlowLoading(
                         message = "Cargando tickets de todos los usuarios...",
@@ -681,6 +763,91 @@ private fun BadgeBox(
                     contentDescription = "Editar",
                     tint = textColor,
                     modifier = Modifier.size(10.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AuditLogCard(log: TicketAuditLog, onNavigateToDetail: (Long) -> Unit) {
+    val operationIcon = when (log.operation.uppercase()) {
+        "INSERT" -> Icons.Default.Add
+        "UPDATE" -> Icons.Default.Edit
+        "DELETE" -> Icons.Default.Delete
+        else -> Icons.Default.History
+    }
+    val operationColor = when (log.operation.uppercase()) {
+        "INSERT" -> StatusSuccessGreen
+        "UPDATE" -> StatusInfoBlue
+        "DELETE" -> PriorityCritical
+        else -> TextSecondary
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onNavigateToDetail(log.ticketId) },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CardStroke))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = operationIcon,
+                        contentDescription = null,
+                        tint = operationColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Ticket #${log.ticketId}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+                Text(
+                    text = formatAdminFecha(log.createdAt),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = log.getDisplayOperation(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = TextPrimary
+            )
+            log.getDisplayValueChange()?.let { change ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = change,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(12.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (log.userName.isNullOrBlank()) {
+                        "UID: ${log.userId.take(8)}..."
+                    } else {
+                        log.userName
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
                 )
             }
         }
